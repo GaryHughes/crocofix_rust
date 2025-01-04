@@ -1,70 +1,6 @@
 pub mod dictionary;
 
-#[allow(non_snake_case)]
-
-pub mod fix_4_2 {
-
-pub struct Side {
-}
-
-impl Side {
-    
-    #[allow(non_snake_case)]
-    pub fn Buy() -> &'static crate::dictionary::FieldValue {
-        static VALUE: crate::dictionary::FieldValue = crate::dictionary::FieldValue { tag: 54 , name: "Buy", value: "1" };
-        &VALUE
-    }
-
-    #[allow(non_snake_case)]
-    pub fn Sell() -> &'static crate::dictionary::FieldValue {
-        static VALUE: crate::dictionary::FieldValue = crate::dictionary::FieldValue { tag: 54, name: "Sell", value: "2" };
-        &VALUE
-    }
-
-}
-
-impl crate::dictionary::VersionField for Side {
-
-    fn tag(&self) -> u32 { 54 }
-    fn name(&self) -> &str { "Side" }
-    fn data_type(&self) -> &str { "SideCodeSet" }
-    fn description(&self) -> &str { "Side of order" }
-    
-    fn pedigree(&self) -> crate::dictionary::Pedigree {
-        crate::dictionary::Pedigree {
-            added: Some("FIX.2.7".to_string()),
-            added_ep: None,
-            updated: None,
-            updated_ep: None,
-            deprecated: None,
-            deprecated_ep: None
-        }
-    }
-    
-    fn values(&self) -> &'static Vec<&'static crate::dictionary::FieldValue> {
-        static VALUES: std::sync::OnceLock<Vec<&'static crate::dictionary::FieldValue>> = std::sync::OnceLock::new();
-        VALUES.get_or_init(|| {
-            vec![
-                Side::Buy(), 
-                Side::Sell()
-            ]
-        })
-    }
-
-}
-
-pub fn fields() -> &'static Vec<Box<dyn crate::dictionary::VersionField + Send + Sync>> {
-    static FIELDS: std::sync::OnceLock<Vec<Box<dyn crate::dictionary::VersionField + Send + Sync>>> = std::sync::OnceLock::new();
-    FIELDS.get_or_init(|| {
-        vec![
-            Box::new(crate::dictionary::InvalidField{}),
-            Box::new(Side{})
-        ]
-    })
-}
-
-}
-
+include!(concat!(env!("OUT_DIR"), "/FIX_4_2.rs"));
 
 
 #[cfg(test)]
@@ -73,12 +9,12 @@ mod tests {
 
     #[test]
     fn value_definitions() {
-        let buy = fix_4_2::Side::Buy();
+        let buy = FIX_4_2::Side::Buy();
         assert_eq!(buy.tag, 54);
         assert_eq!(buy.name, "Buy");
         assert_eq!(buy.value, "1");
 
-        let sell = fix_4_2::Side::Sell();
+        let sell = FIX_4_2::Side::Sell();
         assert_eq!(sell.tag, 54);
         assert_eq!(sell.name, "Sell");
         assert_eq!(sell.value, "2")
@@ -86,7 +22,7 @@ mod tests {
 
     #[test]
     fn version_invalid_field_definition() {
-        let invalid = &fix_4_2::fields()[0];
+        let invalid = &FIX_4_2::fields()[0];
         assert!(invalid.is_valid() == false);
         assert_eq!(invalid.tag(), 0);
         assert_eq!(invalid.name(), "");
@@ -97,7 +33,7 @@ mod tests {
 
     #[test]
     fn version_valid_field_definition() {
-        let valid = &fix_4_2::fields()[1];
+        let valid = &FIX_4_2::fields()[1];
         assert!(valid.is_valid() == true);
         assert_eq!(valid.tag(), 54);
         assert_eq!(valid.name(), "Side");
@@ -153,6 +89,73 @@ mod tests {
 
         //     REQUIRE_THROWS_AS(crocofix::FIX_5_0SP2::fields()["MadeUp"], std::out_of_range);
 
+    }
+
+
+    #[test]
+    fn orchestration_message_definitions() {
+        // auto orchestration = crocofix::FIX_4_4::orchestration();
+
+        // REQUIRE(orchestration.messages().size() == 93);
+
+        // auto heartbeat = orchestration.messages()[0];
+
+        // REQUIRE(heartbeat.name() == "Heartbeat");
+        // REQUIRE(heartbeat.msg_type() == "0");
+        // REQUIRE(heartbeat.category() == "Session");
+        // REQUIRE(heartbeat.pedigree().added() == "FIX.2.7");        
+        // REQUIRE(heartbeat.synopsis() == "The Heartbeat monitors the status of the communication link and identifies when the last of a string of messages was not received.");
+    }
+
+    #[test]
+    fn orchestration_msg_type_lookup_with_valid_msg_type() {
+        // auto orchestration = crocofix::FIX_4_4::orchestration();
+        // const auto& executionReport = orchestration.messages()["8"];
+        // REQUIRE(executionReport.name() == "ExecutionReport");
+    }
+
+    #[test]
+    fn orchestration_msg_type_lookup_with_invalid_msg_type() {
+        // auto orchestration = crocofix::FIX_4_4::orchestration();
+        // REQUIRE_THROWS(orchestration.messages()["XXX"]);
+    }
+
+    #[test]
+    fn orchestration_message_fields() {
+        // auto orchestration = crocofix::FIX_4_4::orchestration();
+        // auto heartbeat = orchestration.messages()[0];
+        // REQUIRE(heartbeat.fields().size() == 34);
+    }
+
+    #[test]
+    fn orchestration_lookup_message_name() {
+        // auto orchestration = crocofix::FIX_4_4::orchestration();
+        // REQUIRE(orchestration.messages().name_of_message("A") == "Logon");
+        // REQUIRE(orchestration.messages().name_of_message("ZZZZ").empty());
+    }
+
+    #[test]
+    fn orchestration_version_field_definitions() {
+        // auto orchestration = crocofix::FIX_4_4::orchestration();
+        // REQUIRE(orchestration.fields()[0].is_valid() == false);
+        // REQUIRE(orchestration.fields().size() == 913);
+        // REQUIRE(orchestration.fields()[54].is_valid() == true);
+        // REQUIRE(orchestration.fields()[54].tag() == 54);
+    }
+
+    #[test]
+    fn orchestration_lookup_field_name() {
+        // auto orchestration = crocofix::FIX_4_4::orchestration();
+        // REQUIRE(orchestration.fields().name_of_field(100) == "ExDestination");
+        // REQUIRE(orchestration.fields().name_of_field(999999).empty());
+    }
+
+    #[test]
+    fn orchestration_lookup_field_value() {
+        // auto orchestration = crocofix::FIX_4_4::orchestration();
+        // REQUIRE(orchestration.fields().name_of_value(18, "G") == "AllOrNone");
+        // REQUIRE(orchestration.fields().name_of_value(999999, "1").empty());
+        // REQUIRE(orchestration.fields().name_of_value(999999, "54").empty());
     }
 
 }
