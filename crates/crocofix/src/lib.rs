@@ -1,20 +1,47 @@
 pub mod dictionary;
 
 include!(concat!(env!("OUT_DIR"), "/FIX_4_2.rs"));
-
+include!(concat!(env!("OUT_DIR"), "/FIX_4_4.rs"));
+include!(concat!(env!("OUT_DIR"), "/FIX_5_0SP2.rs"));
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn value_definitions() {
+    fn value_definitions_4_2() {
         let buy = FIX_4_2::Side::Buy();
         assert_eq!(buy.tag, 54);
         assert_eq!(buy.name, "Buy");
         assert_eq!(buy.value, "1");
 
         let sell = FIX_4_2::Side::Sell();
+        assert_eq!(sell.tag, 54);
+        assert_eq!(sell.name, "Sell");
+        assert_eq!(sell.value, "2")
+    }
+
+    #[test]
+    fn value_definitions_4_4() {
+        let buy = FIX_4_4::Side::Buy();
+        assert_eq!(buy.tag, 54);
+        assert_eq!(buy.name, "Buy");
+        assert_eq!(buy.value, "1");
+
+        let sell = FIX_4_4::Side::Sell();
+        assert_eq!(sell.tag, 54);
+        assert_eq!(sell.name, "Sell");
+        assert_eq!(sell.value, "2")
+    }
+
+    #[test]
+    fn value_definitions_5_0_sp2() {
+        let buy = FIX_5_0SP2::Side::Buy();
+        assert_eq!(buy.tag, 54);
+        assert_eq!(buy.name, "Buy");
+        assert_eq!(buy.value, "1");
+
+        let sell = FIX_5_0SP2::Side::Sell();
         assert_eq!(sell.tag, 54);
         assert_eq!(sell.name, "Sell");
         assert_eq!(sell.value, "2")

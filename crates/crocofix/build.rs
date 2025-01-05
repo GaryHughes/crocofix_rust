@@ -1,28 +1,42 @@
 use std::env;
 use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 use std::io;
 use std::io::Write;
 
 fn main()
 {
-    let out_dir = env::var_os("OUT_DIR").unwrap();
-    let manifest_dir = env::var_os("CARGO_MANIFEST_DIR").unwrap();
-    let program = format!("{}/../../lexicographer/lexicographer.py", manifest_dir.to_str().unwrap());
-    let output = Path::new(&out_dir).join("FIX_4_2.rs");
-    let orchestration = format!("{}/../../orchestrations/fix_repository_4_2.xml",  manifest_dir.to_str().unwrap()); 
+    let manifest_dir = env::var_os("CARGO_MANIFEST_DIR")
+        .unwrap()
+        .into_string()
+        .expect("Failed to convert CARGO_MANIFEST_DIR into a String");
+  
+    let lexicographer: PathBuf = [manifest_dir.clone(), "..".into(), "..".into(), "lexicographer".into(), "lexicographer.py".into()].iter().collect();
 
-    println!("OUT_DIR {}", out_dir.to_str().unwrap());
-    println!("MANIFEST_DIR {}", manifest_dir.to_str().unwrap());
-    println!("PROGRAM {}", program);
-    println!("OUTPUT {}", output.to_str().unwrap());
-    println!("ORCHESTRATION {}", orchestration);
-    
+    let fix_4_2_orchestration = [manifest_dir.clone(), "..".into(), "..".into(), "orchestrations".into(), "fix_repository_4_2.xml".into()].iter().collect();
+    let fix_4_4_orchestration = [manifest_dir.clone(), "..".into(), "..".into(), "orchestrations".into(), "fix_repository_4_4.xml".into()].iter().collect();
+    let fix_5_0_orchestration = [manifest_dir.clone(), "..".into(), "..".into(), "orchestrations".into(), "fix_repository_5_0SP2_EP258.xml".into()].iter().collect();
+
+    generate_orchestration_types(&lexicographer, fix_4_2_orchestration, "FIX_4_2");
+    generate_orchestration_types(&lexicographer, fix_4_4_orchestration, "FIX_4_4");
+    generate_orchestration_types(&lexicographer, fix_5_0_orchestration, "FIX_5_0SP2");
+}
+
+fn generate_orchestration_types(program: &PathBuf, orchestration: PathBuf, module: &str) {
+
+    // TODO - Make this more selective so changing one orchestration doesn't regenerate all the files.
+    println!("cargo::rerun-if-changed={}", orchestration.to_str().unwrap());
+
+    let out_dir = env::var_os("OUT_DIR").unwrap();
+    let filename = format!("{}.rs", module);
+    let output = Path::new(&out_dir).join(&filename);
+
     let output = Command::new(program)
         .arg("--output")
         .arg(output)
         .arg("--module")
-        .arg("FIX_4_2")
+        .arg(module)
         .arg("--orchestration")
         .arg(orchestration)
         .output()
@@ -31,6 +45,4 @@ fn main()
     println!("status: {}", output.status);
     io::stdout().write_all(&output.stdout).unwrap();
     io::stderr().write_all(&output.stderr).unwrap();
-
-    println!("cargo::rerun-if-changed=FIX_4_2.rs");
 }

@@ -75,6 +75,7 @@ def generate_orchestration_fields(file, orchestration):
         file.write("}\n\n")
 
 
+    # TODO - Replace the Vec with a collection like the C++ version has that stores tag indices so we avoid thousands of InvalidFields in FIX.5.x
     file.write("pub fn fields() -> &'static Vec<Box<dyn crate::dictionary::VersionField + Send + Sync>> {\n")
     file.write("    static FIELDS: std::sync::OnceLock<Vec<Box<dyn crate::dictionary::VersionField + Send + Sync>>> = std::sync::OnceLock::new();\n")
     file.write("    FIELDS.get_or_init(|| {\n")
