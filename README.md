@@ -1,3 +1,5 @@
+[![Rust](https://github.com/GaryHughes/crocofix_rust/actions/workflows/build.yml/badge.svg)](https://github.com/GaryHughes/crocofix_rust/actions/workflows/build.yml)
+
 # CrocoFIX
 
 
