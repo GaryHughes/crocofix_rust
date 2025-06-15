@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn version_valid_field_definition() {
-        let valid = &FIX_4_2::fields()[1];
+        let valid = &FIX_4_2::fields()[54];
         assert!(valid.is_valid() == true);
         assert_eq!(valid.tag(), 54);
         assert_eq!(valid.name(), "Side");

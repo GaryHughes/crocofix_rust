@@ -29,7 +29,7 @@ if __name__ == '__main__':
         file.write("#[allow(dead_code)]\n\n")
         file.write("pub mod {} {{\n\n".format(args.module))
 
-        generate_orchestration_fields(file, orchestration)
+        generate_orchestration_fields(file, orchestration, args.module)
 
         file.write("}\n")
 

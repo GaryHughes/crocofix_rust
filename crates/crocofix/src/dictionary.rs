@@ -1,3 +1,4 @@
+use std::ops::Index;
 
 pub struct Pedigree {
     pub added: Option<String>,
@@ -62,3 +63,33 @@ impl crate::dictionary::VersionField for InvalidField {
     }
 
 }
+
+pub struct VersionFieldCollection {
+
+    offsets: Vec<usize>,
+    fields: Vec<Box<dyn VersionField>>
+
+}
+
+impl VersionFieldCollection {
+
+    pub fn new(offsets: Vec<usize>, fields: Vec<Box<dyn VersionField>>) -> Self {
+        Self { offsets, fields }
+    }
+
+}
+
+unsafe impl Sync for VersionFieldCollection {}
+unsafe impl Send for VersionFieldCollection {}
+
+impl Index<usize> for VersionFieldCollection {
+    
+    type Output = Box<dyn VersionField>;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        let offset = self.offsets[index];
+        &self.fields[offset]
+    }
+}
+
+

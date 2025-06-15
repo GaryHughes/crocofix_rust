@@ -7,7 +7,7 @@ def format_pedigree(pedigree):
         return 'None'
     return 'Some("{}".to_string())'.format(pedigree)
 
-def generate_orchestration_fields(file, orchestration):
+def generate_orchestration_fields(file, orchestration, module):
     sorted_fields = sorted(orchestration.fields_by_tag.values(), key=lambda x: int(x.id))
 
     for field in sorted_fields:
@@ -75,16 +75,45 @@ def generate_orchestration_fields(file, orchestration):
         file.write("}\n\n")
 
 
-    # TODO - Replace the Vec with a collection like the C++ version has that stores tag indices so we avoid thousands of InvalidFields in FIX.5.x
-    file.write("pub fn fields() -> &'static Vec<Box<dyn crate::dictionary::VersionField + Send + Sync>> {\n")
-    file.write("    static FIELDS: std::sync::OnceLock<Vec<Box<dyn crate::dictionary::VersionField + Send + Sync>>> = std::sync::OnceLock::new();\n")
+    file.write("pub fn fields() -> &'static crate::dictionary::VersionFieldCollection {\n")
+    file.write("    static FIELDS: std::sync::OnceLock<crate::dictionary::VersionFieldCollection> = std::sync::OnceLock::new();\n")
     file.write("    FIELDS.get_or_init(|| {\n")
-    file.write("        vec![\n")
-                # Box::new(crate::dictionary::InvalidField{}),
-                # Box::new(Side{})
-    file.write("        ]\n")
+    file.write("        crate::dictionary::VersionFieldCollection::new(\n")
+    file.write("            vec![\n                ")
+
+    index = 0
+    offset = -1
+    for field in sorted_fields:
+        while index < int(field.id):
+            file.write("0,")
+            index += 1
+            offset += 1
+            if index % 20 == 0:
+                file.write('\n                ')
+        file.write("{},".format(index - offset))
+        index += 1
+        if index % 20 == 0:
+            file.write('\n                ')
+
+
+    file.write("\n            ],\n")
+    file.write("            vec![\n")
+    file.write("                Box::new(crate::dictionary::InvalidField{}),\n")
+  
+    index = 1
+    for field in sorted_fields:
+        file.write('                Box::new(crate::{}::{}{{}}),\n'.format(module, field.name))
+        # Investigate why this is here, prob just optimisation to avoid a massive list
+        # if index > 3000:
+        #     break
+        index += 1
+                   
+    file.write("            ]\n")
+    file.write("       )")
     file.write("   })\n")
     file.write("}\n")
+
+
 
 
 
