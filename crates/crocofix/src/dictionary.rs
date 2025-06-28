@@ -32,6 +32,17 @@ pub trait VersionField {
     } 
     fn values(&self) -> &'static Vec<&'static crate::dictionary::FieldValue>;
     fn is_valid(&self) -> bool { self.tag() != 0 }
+
+    // Return the name of an enumerated value if it is defined for this field e.g. 1 -> 'Buy' for Side.
+    // Returns an empty string if no such value is defined.
+    fn name_of_value(&self, value: &str) -> String
+    {
+        return match self.values().into_iter().find(|&item| item.value == value) {
+            None => "".to_string(),
+            Some(entry) => entry.name.to_string()
+        }
+    }
+
 }
 
 pub struct InvalidField {
@@ -73,8 +84,29 @@ pub struct VersionFieldCollection {
 
 impl VersionFieldCollection {
 
-    pub fn new(offsets: Vec<usize>, fields: Vec<Box<dyn VersionField>>) -> Self {
+    pub fn new(offsets: Vec<usize>, fields: Vec<Box<dyn VersionField>>) -> Self 
+    {
         Self { offsets, fields }
+    }
+
+    pub fn name_of_field(&self, tag: usize) -> String 
+    {
+        if tag < self.offsets.len() {
+            let offset = self.offsets[tag];
+            return self.fields[offset].name().to_string()
+        }
+
+        return String::new()
+    }
+
+    pub fn name_of_value(&self, tag: usize, value: &str) -> String 
+    {
+        if tag < self.offsets.len() {
+            let offset = self.offsets[tag];
+            return self.fields[offset].name_of_value(value).to_string()
+        }
+
+        return String::new()
     }
 
 }
@@ -86,10 +118,13 @@ impl Index<usize> for VersionFieldCollection {
     
     type Output = Box<dyn VersionField>;
 
-    fn index(&self, index: usize) -> &Self::Output {
-        let offset = self.offsets[index];
+    // TODO - Consider a different trait like array_opts and return an Option
+    fn index(&self, tag: usize) -> &Self::Output
+    {
+        let offset = self.offsets[tag];
         &self.fields[offset]
     }
+  
 }
 
 

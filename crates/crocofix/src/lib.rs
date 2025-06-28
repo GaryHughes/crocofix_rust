@@ -71,52 +71,40 @@ mod tests {
 
     #[test]
     fn lookup_field_name() {
-
-        //     REQUIRE(crocofix::FIX_4_4::fields().name_of_field(100) == "ExDestination");
-        //     REQUIRE(crocofix::FIX_4_4::fields().name_of_field(999999).empty());
-
+        assert!(&FIX_4_4::fields().name_of_field(100) == "ExDestination");
+        assert!(&FIX_4_4::fields().name_of_field(999999).is_empty());
     }
 
     #[test]
     fn lookup_field_value() {
+        assert!(&FIX_4_4::fields().name_of_value(18, "G") == "AllOrNone");
+        assert!(&FIX_4_4::fields().name_of_value(999999, "1").is_empty());
+        assert!(&FIX_4_4::fields().name_of_value(999999, "54").is_empty());
 
-        //     REQUIRE(crocofix::FIX_4_4::fields().name_of_value(18, "G") == "AllOrNone");
-//     REQUIRE(crocofix::FIX_4_4::fields().name_of_value(999999, "1").empty());
-//     REQUIRE(crocofix::FIX_4_4::fields().name_of_value(999999, "54").empty());
-
+        assert!(&FIX_5_0SP2::fields().name_of_value(18, "G") == "AllOrNone");
+        assert!(&FIX_5_0SP2::fields().name_of_value(999999, "1").is_empty());
+        assert!(&FIX_5_0SP2::fields().name_of_value(999999, "54").is_empty());
     }
 
     #[test]
-    fn field_name() {
-
-        //     REQUIRE(crocofix::FIX_5_0SP2::fields().name_of_value(18, "G") == "AllOrNone");
-//     REQUIRE(crocofix::FIX_5_0SP2::fields().name_of_value(999999, "1").empty());
-//     REQUIRE(crocofix::FIX_5_0SP2::fields().name_of_value(999999, "54").empty());
-
-//     REQUIRE(crocofix::FIX_5_0SP2::fields()[1].name() == "Account");
-
-    }
-
-    #[test]
+    #[should_panic]
     fn tag_too_high_fails() {
-
-        //     REQUIRE_THROWS_AS(crocofix::FIX_4_4::fields()[1000], std::out_of_range);
-
+        let _ = &FIX_4_4::fields()[1000];
     }
 
-    #[test]
-    fn lookup_field_by_name() {
+    // How do we idiomatically model overloaded index methods?
 
-        //     REQUIRE(crocofix::FIX_5_0SP2::fields()["ExDestination"].tag() == 100);
+    // #[test]
+    // fn lookup_field_by_name() {
+    //     assert!(&FIX_5_0SP2::fields()["ExDestination"].tag() == 100);
+    // }
 
-    }
+    // #[test]
+    // #[should_panic]
+    // fn lookup_invalid_name_fails() {
 
-    #[test]
-    fn lookup_invalid_name_fails() {
-
-        //     REQUIRE_THROWS_AS(crocofix::FIX_5_0SP2::fields()["MadeUp"], std::out_of_range);
-
-    }
+    //     let _ = &FIX_5_0SP2::fields()["MadeUp"];
+    // }
 
 
     #[test]
