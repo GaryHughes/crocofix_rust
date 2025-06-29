@@ -28,5 +28,21 @@ def generate_orchestration_messages(file, orchestration, module):
         file.write("    }\n")
 
         file.write("}\n\n")
-
+    
     file.write("}\n") # pub mod message
+
+    file.write("pub fn messages() -> &'static crate::dictionary::VersionMessageCollection {\n")
+    file.write("    static FIELDS: std::sync::OnceLock<crate::dictionary::VersionMessageCollection> = std::sync::OnceLock::new();\n")
+    file.write("    FIELDS.get_or_init(|| {\n")
+    file.write("        crate::dictionary::VersionMessageCollection::new(\n")
+    file.write("            vec![\n")
+
+    for message in orchestration.messages.values():
+        file.write('                Box::new(crate::{}::message::{}{{}}),\n'.format(module, message.name))
+                   
+    file.write("            ]\n")
+    file.write("       )")
+    file.write("   })\n")
+    file.write("}\n")
+
+    

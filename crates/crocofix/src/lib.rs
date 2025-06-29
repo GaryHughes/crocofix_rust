@@ -147,9 +147,9 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
     fn orchestration_msg_type_lookup_with_invalid_msg_type() {
-        // auto orchestration = crocofix::FIX_4_4::orchestration();
-        // REQUIRE_THROWS(orchestration.messages()["XXX"]);
+        let _ = &FIX_4_4::messages()[200];
     }
 
     #[test]

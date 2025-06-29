@@ -192,3 +192,38 @@ pub trait Message
     } 
     //     const crocofix::dictionary::message_field_collection& fields() const noexcept { return m_fields; }
 }
+
+pub struct VersionMessageCollection {
+
+    messages: Vec<Box<dyn Message>>
+
+}
+
+impl VersionMessageCollection {
+
+    pub fn new(messages: Vec<Box<dyn Message>>) -> Self 
+    {
+        Self { messages }
+    }
+
+}
+
+unsafe impl Sync for VersionMessageCollection {}
+unsafe impl Send for VersionMessageCollection {}
+
+impl Index<usize> for VersionMessageCollection {
+    
+    type Output = Box<dyn Message>;
+
+    // TODO - Consider a different trait like array_opts and return an Option
+    fn index(&self, index: usize) -> &Self::Output
+    {
+        &self.messages[index]
+    }
+  
+}
+
+pub trait Orchestration
+{
+
+}
