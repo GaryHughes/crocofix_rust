@@ -1,3 +1,5 @@
+use dictionary::Message;
+
 pub mod dictionary;
 
 include!(concat!(env!("OUT_DIR"), "/FIX_4_2.rs"));
@@ -106,6 +108,21 @@ mod tests {
     //     let _ = &FIX_5_0SP2::fields()["MadeUp"];
     // }
 
+    #[test]
+    fn message_definition() {
+        let order_single = FIX_4_4::message::NewOrderSingle{};
+        assert!(order_single.name() == "NewOrderSingle");
+        assert!(order_single.msg_type() == "D");
+        assert!(order_single.category() == "SingleGeneralOrderHandling");
+        assert!(order_single.synopsis() == "The new order message type is used by institutions wishing to electronically submit securities and forex orders to a broker for execution.");
+        let pedigree = order_single.pedigree();
+        assert!(pedigree.added == Some("FIX.2.7".to_string()));
+        assert!(pedigree.added_ep == None);
+        assert!(pedigree.updated == None);
+        assert!(pedigree.updated_ep == None);
+        assert!(pedigree.deprecated == None);
+        assert!(pedigree.deprecated_ep == None);
+    }
 
     #[test]
     fn orchestration_message_definitions() {

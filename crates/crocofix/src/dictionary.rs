@@ -127,4 +127,68 @@ impl Index<usize> for VersionFieldCollection {
   
 }
 
+// pub trait MessageField
+// {
+//     fn tag(&self) -> u32;
+//     fn name(&self) -> &str;
+//     fn r#type(&self) -> &str;
+//     fn synopsis(&self) -> &str;
+//     fn pedigree(&self) -> crate::dictionary::Pedigree;
+//     // constexpr dictionary::presence presence() const noexcept { return m_presence; }
+//     // Nested groups are indicated using this field.
+//     fn depth(&self) -> u32;
+// }
 
+// class message_field
+// {
+// public:
+
+//     message_field(const orchestration_field& field, dictionary::presence presence, size_t depth)
+//     : m_field(field),
+//       m_presence(presence),
+//       m_depth(depth)
+//     {
+//     }
+
+//     constexpr int tag() const noexcept { return m_field.tag(); }
+//     constexpr const std::string_view& name() const noexcept { return m_field.name(); }
+//     constexpr const std::string_view& type() const noexcept { return m_field.type(); }
+//     constexpr const std::string_view& synopsis() const noexcept { return m_field.synopsis(); }
+//     constexpr const dictionary::pedigree& pedigree() const noexcept { return m_field.pedigree(); }
+  
+//     constexpr dictionary::presence presence() const noexcept { return m_presence; }
+//     // Nested groups are indicated using this field.
+//     constexpr size_t depth() const noexcept { return m_depth; }
+
+// private:
+
+//     orchestration_field m_field;
+//     dictionary::presence m_presence;
+//     size_t m_depth;
+  
+// };
+
+// pub struct MessageFieldCollection {
+
+//     fields: Vec<Box<dyn MessageField>>
+
+// }
+
+pub trait Message
+{
+    fn name(&self) -> &str;
+    fn msg_type(&self) -> &str;
+    fn category(&self) -> &str;
+    fn synopsis(&self) -> &str;
+    fn pedigree(&self) -> crate::dictionary::Pedigree {
+        crate::dictionary::Pedigree {
+            added: None,
+            added_ep: None,
+            updated: None,
+            updated_ep: None,
+            deprecated: None,
+            deprecated_ep: None
+        } 
+    } 
+    //     const crocofix::dictionary::message_field_collection& fields() const noexcept { return m_fields; }
+}

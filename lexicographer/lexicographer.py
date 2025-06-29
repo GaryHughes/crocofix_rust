@@ -8,6 +8,8 @@ sys.path.append('../../fixorchestra')
 from fixorchestra.orchestration import *
 
 from orchestration_fields_generator import *
+from orchestration_messages_generator import *
+from orchestration_generator import *
 
 if __name__ == '__main__':
 
@@ -30,6 +32,8 @@ if __name__ == '__main__':
         file.write("pub mod {} {{\n\n".format(args.module))
 
         generate_orchestration_fields(file, orchestration, args.module)
+        generate_orchestration_messages(file, orchestration, args.module)
+        generate_orchestration(file, orchestration, args.module)
 
         file.write("}\n")
 

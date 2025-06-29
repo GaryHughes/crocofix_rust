@@ -5,3 +5,7 @@ def sanitise(string):
         return ''
     return string.replace('\n', '').replace('"', '\'').encode("ascii", errors="ignore").decode()
 
+def format_pedigree(pedigree):
+    if pedigree is None:
+        return 'None'
+    return 'Some("{}".to_string())'.format(pedigree)

@@ -2,11 +2,6 @@
 
 from sanitise import *
 
-def format_pedigree(pedigree):
-    if pedigree is None:
-        return 'None'
-    return 'Some("{}".to_string())'.format(pedigree)
-
 def generate_orchestration_fields(file, orchestration, module):
     sorted_fields = sorted(orchestration.fields_by_tag.values(), key=lambda x: int(x.id))
 
