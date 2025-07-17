@@ -3,55 +3,16 @@
 from sanitise import *
 
 def generate_orchestration(file, orchestration, module):
-    pass
-
-
-
-
-# namespace crocofix::FIX_4_2
-# {
-
-# class orchestration : public crocofix::dictionary::orchestration
-# {
-# public:
     
-#     orchestration()
-#     : crocofix::dictionary::orchestration(crocofix::FIX_4_2::messages(), crocofix::FIX_4_2::fields())
-#     {
-#     }
+    file.write("\npub struct Orchestration {\n")
+    file.write("}\n\n")
 
-# };
-
-# }
-
-
-# namespace crocofix::dictionary
-# {
-
-# class orchestration
-# {
-# public:
-
-#     orchestration(const message_collection& messages,
-#                   const orchestration_field_collection& fields)
-#     :   m_messages(messages),
-#         m_fields(fields)
-#     {
-#     }
-
-#     const message_collection& messages() const noexcept { return m_messages; }
-#     const orchestration_field_collection& fields() const noexcept { return m_fields; }
-
-#     bool is_field_defined(size_t tag) const
-#     {
-#         return fields()[tag].is_valid();
-#     }
-
-# private:
-
-#     const message_collection& m_messages;
-#     const orchestration_field_collection& m_fields;
-
-# };
-
-# }
+    file.write("impl crate::dictionary::Orchestration for Orchestration {\n")
+    file.write("    fn fields(&self) -> &'static crate::dictionary::VersionFieldCollection {{ crate::{}::fields() }}\n".format(module))
+    file.write("    fn messages(&self) -> &'static crate::dictionary::VersionMessageCollection {{ crate::{}::messages() }}\n".format(module))
+    file.write("}\n\n")
+               
+    file.write("pub fn orchestration() -> &'static crate::{}::Orchestration {{\n".format(module))
+    file.write("    static ORCHESTRATION: std::sync::OnceLock<crate::{}::Orchestration> = std::sync::OnceLock::new();\n".format(module))
+    file.write("    ORCHESTRATION.get_or_init(|| {{ crate::{}::Orchestration{{}} }})\n".format(module))
+    file.write("}\n\n")

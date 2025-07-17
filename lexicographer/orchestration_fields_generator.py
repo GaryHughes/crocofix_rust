@@ -31,7 +31,7 @@ def generate_orchestration_fields(file, orchestration, module):
         file.write("    fn tag(&self) -> u32 {{ {} }}\n".format(field.id))
         file.write("    fn name(&self) -> &str {{ \"{}\" }}\n".format(field.name))
         file.write("    fn data_type(&self) -> &str {{ \"{}\" }}\n".format(field.type))
-        file.write("    fn description(&self) -> &str {{ \"{}\" }}\n".format(sanitise(field.synopsis)))
+        file.write("    fn synopsis(&self) -> &str {{ \"{}\" }}\n".format(sanitise(field.synopsis)))
         
         file.write("    fn pedigree(&self) -> crate::dictionary::Pedigree {\n")
         file.write("        crate::dictionary::Pedigree {\n")

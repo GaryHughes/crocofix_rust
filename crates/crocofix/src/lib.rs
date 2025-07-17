@@ -1,4 +1,6 @@
 use dictionary::Message;
+use dictionary::Orchestration;
+use dictionary::Presence;
 
 pub mod dictionary;
 
@@ -55,7 +57,7 @@ mod tests {
         assert!(invalid.is_valid() == false);
         assert_eq!(invalid.tag(), 0);
         assert_eq!(invalid.name(), "");
-        assert_eq!(invalid.description(), "");
+        assert_eq!(invalid.synopsis(), "");
         // pedigree
         assert_eq!(invalid.values().len(), 0);
     }
@@ -66,7 +68,7 @@ mod tests {
         assert!(valid.is_valid() == true);
         assert_eq!(valid.tag(), 54);
         assert_eq!(valid.name(), "Side");
-        assert_eq!(valid.description(), "Side of order");
+        assert_eq!(valid.synopsis(), "Side of order");
         // pedigree
         assert!(valid.values().len() > 0);
     }
@@ -126,22 +128,20 @@ mod tests {
 
     #[test]
     fn orchestration_message_definitions() {
-        // auto orchestration = crocofix::FIX_4_4::orchestration();
-
-        // REQUIRE(orchestration.messages().size() == 93);
-
-        // auto heartbeat = orchestration.messages()[0];
-
-        // REQUIRE(heartbeat.name() == "Heartbeat");
-        // REQUIRE(heartbeat.msg_type() == "0");
-        // REQUIRE(heartbeat.category() == "Session");
-        // REQUIRE(heartbeat.pedigree().added() == "FIX.2.7");        
-        // REQUIRE(heartbeat.synopsis() == "The Heartbeat monitors the status of the communication link and identifies when the last of a string of messages was not received.");
+        let orchestration = &FIX_4_4::orchestration();
+        assert!(orchestration.messages().len() == 93);
+        let heartbeat = &orchestration.messages()[0];
+        assert!(heartbeat.name() == "Heartbeat");
+        assert!(heartbeat.msg_type() == "0");
+        assert!(heartbeat.category() == "Session");
+        assert!(heartbeat.pedigree().added == Some("FIX.2.7".to_string()));
+        assert!(heartbeat.synopsis() == "The Heartbeat monitors the status of the communication link and identifies when the last of a string of messages was not received.");
     }
 
     #[test]
     fn orchestration_msg_type_lookup_with_valid_msg_type() {
-        // auto orchestration = crocofix::FIX_4_4::orchestration();
+        //let orchestration = &FIX_4_4::orchestration();let orchestration = &FIX_4_4::orchestration();
+        //let executionReport = &orchestration.messages()["8"]
         // const auto& executionReport = orchestration.messages()["8"];
         // REQUIRE(executionReport.name() == "ExecutionReport");
     }
@@ -154,9 +154,23 @@ mod tests {
 
     #[test]
     fn orchestration_message_fields() {
-        // auto orchestration = crocofix::FIX_4_4::orchestration();
-        // auto heartbeat = orchestration.messages()[0];
-        // REQUIRE(heartbeat.fields().size() == 34);
+        let orchestration = &FIX_4_4::orchestration();
+        let heartbeat = &orchestration.messages()[0];
+        assert!(heartbeat.fields().len() == 34);
+        let begin_string = &heartbeat.fields()[0];
+        assert!(begin_string.tag() == 8);
+        assert!(begin_string.name() == "BeginString".to_string());
+        assert!(begin_string.data_type() == "String".to_string());
+        assert!(begin_string.synopsis() == "Identifies beginning of new message and protocol version. ALWAYS FIRST FIELD IN MESSAGE. (Always unencrypted)".to_string());
+        assert!(begin_string.depth() == 0);
+        assert!(begin_string.presence() == Presence::Required);
+        let pedigree = begin_string.pedigree();
+        assert!(pedigree.added == Some("FIX.2.7".to_string()));
+        assert!(pedigree.added_ep == None);
+        assert!(pedigree.updated == None);
+        assert!(pedigree.updated_ep == None);
+        assert!(pedigree.deprecated == None);
+        assert!(pedigree.deprecated_ep == None);
     }
 
     #[test]

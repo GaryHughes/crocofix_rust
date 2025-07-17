@@ -19,7 +19,7 @@ pub trait VersionField {
     fn tag(&self) -> u32;
     fn name(&self) -> &str;
     fn data_type(&self) -> &str;
-    fn description(&self) -> &str;
+    fn synopsis(&self) -> &str;
     fn pedigree(&self) -> crate::dictionary::Pedigree { 
         crate::dictionary::Pedigree {
             added: None,
@@ -53,7 +53,7 @@ impl crate::dictionary::VersionField for InvalidField {
     fn tag(&self) -> u32 { 0 }
     fn name(&self) -> &str { "" }
     fn data_type(&self) -> &str { "" }
-    fn description(&self) -> &str { "" }
+    fn synopsis(&self) -> &str { "" }
     
     fn pedigree(&self) -> crate::dictionary::Pedigree {
         crate::dictionary::Pedigree {
@@ -127,52 +127,41 @@ impl Index<usize> for VersionFieldCollection {
   
 }
 
-// pub trait MessageField
-// {
-//     fn tag(&self) -> u32;
-//     fn name(&self) -> &str;
-//     fn r#type(&self) -> &str;
-//     fn synopsis(&self) -> &str;
-//     fn pedigree(&self) -> crate::dictionary::Pedigree;
-//     // constexpr dictionary::presence presence() const noexcept { return m_presence; }
-//     // Nested groups are indicated using this field.
-//     fn depth(&self) -> u32;
-// }
+#[derive(Copy, Clone, PartialEq)]
+pub enum Presence {
+    Required,
+    Optional,
+    Forbidden,
+    Ignored,
+    Constant
+}
 
-// class message_field
-// {
-// public:
+pub struct MessageField
+{
+    field: Box<dyn VersionField>,
+    field_presence: Presence,
+    nesting_depth: u32,
+}
 
-//     message_field(const orchestration_field& field, dictionary::presence presence, size_t depth)
-//     : m_field(field),
-//       m_presence(presence),
-//       m_depth(depth)
-//     {
-//     }
+impl MessageField {
 
-//     constexpr int tag() const noexcept { return m_field.tag(); }
-//     constexpr const std::string_view& name() const noexcept { return m_field.name(); }
-//     constexpr const std::string_view& type() const noexcept { return m_field.type(); }
-//     constexpr const std::string_view& synopsis() const noexcept { return m_field.synopsis(); }
-//     constexpr const dictionary::pedigree& pedigree() const noexcept { return m_field.pedigree(); }
-  
-//     constexpr dictionary::presence presence() const noexcept { return m_presence; }
-//     // Nested groups are indicated using this field.
-//     constexpr size_t depth() const noexcept { return m_depth; }
+    pub fn new(field: Box<dyn VersionField>, field_presence: Presence, nesting_depth: u32) -> Self
+    {
+        Self { field, field_presence, nesting_depth }
+    }
 
-// private:
+    pub fn tag(&self) -> u32 { self.field.tag() }
+    pub fn name(&self) -> &str { self.field.name() }
+    pub fn data_type(&self) -> &str { self.field.data_type() }
+    pub fn synopsis(&self) -> &str { self.field.synopsis() }
+    pub fn pedigree(&self) -> crate::dictionary::Pedigree { self.field.pedigree() }
+    pub fn presence(&self) -> Presence { self.field_presence }
+    // Nested groups are indicated using this field.
+    pub fn depth(&self) -> u32 { self.nesting_depth }
+}
 
-//     orchestration_field m_field;
-//     dictionary::presence m_presence;
-//     size_t m_depth;
-  
-// };
-
-// pub struct MessageFieldCollection {
-
-//     fields: Vec<Box<dyn MessageField>>
-
-// }
+unsafe impl Sync for MessageField {}
+unsafe impl Send for MessageField {}
 
 pub trait Message
 {
@@ -190,7 +179,7 @@ pub trait Message
             deprecated_ep: None
         } 
     } 
-    //     const crocofix::dictionary::message_field_collection& fields() const noexcept { return m_fields; }
+    fn fields(&self) -> &'static Vec<Box<crate::dictionary::MessageField>>;
 }
 
 pub struct VersionMessageCollection {
@@ -204,6 +193,10 @@ impl VersionMessageCollection {
     pub fn new(messages: Vec<Box<dyn Message>>) -> Self 
     {
         Self { messages }
+    }
+
+    pub fn len(&self) -> usize {
+        self.messages.len()
     }
 
 }
@@ -225,5 +218,6 @@ impl Index<usize> for VersionMessageCollection {
 
 pub trait Orchestration
 {
-
+    fn fields(&self) -> &'static VersionFieldCollection;
+    fn messages(&self) -> &'static VersionMessageCollection;
 }
