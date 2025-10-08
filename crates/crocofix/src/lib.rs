@@ -75,19 +75,19 @@ mod tests {
 
     #[test]
     fn lookup_field_name() {
-        assert!(&FIX_4_4::fields().name_of_field(100) == "ExDestination");
-        assert!(&FIX_4_4::fields().name_of_field(999999).is_empty());
+        assert_eq!(FIX_4_4::fields().name_of_field(100), Some("ExDestination"));
+        assert_eq!(FIX_4_4::fields().name_of_field(999999), None);
     }
 
     #[test]
     fn lookup_field_value() {
-        assert!(&FIX_4_4::fields().name_of_value(18, "G") == "AllOrNone");
-        assert!(&FIX_4_4::fields().name_of_value(999999, "1").is_empty());
-        assert!(&FIX_4_4::fields().name_of_value(999999, "54").is_empty());
+        assert_eq!(FIX_4_4::fields().name_of_value(18, "G"), Some("AllOrNone"));
+        assert_eq!(FIX_4_4::fields().name_of_value(999999, "1"), None);
+        assert_eq!(FIX_4_4::fields().name_of_value(999999, "54"), None);
 
-        assert!(&FIX_5_0SP2::fields().name_of_value(18, "G") == "AllOrNone");
-        assert!(&FIX_5_0SP2::fields().name_of_value(999999, "1").is_empty());
-        assert!(&FIX_5_0SP2::fields().name_of_value(999999, "54").is_empty());
+        assert_eq!(FIX_5_0SP2::fields().name_of_value(18, "G"), Some("AllOrNone"));
+        assert_eq!(FIX_5_0SP2::fields().name_of_value(999999, "1"), None);
+        assert_eq!(FIX_5_0SP2::fields().name_of_value(999999, "54"), None);
     }
 
     #[test]
@@ -113,37 +113,29 @@ mod tests {
     #[test]
     fn message_definition() {
         let order_single = FIX_4_4::message::NewOrderSingle{};
-        assert!(order_single.name() == "NewOrderSingle");
-        assert!(order_single.msg_type() == "D");
-        assert!(order_single.category() == "SingleGeneralOrderHandling");
-        assert!(order_single.synopsis() == "The new order message type is used by institutions wishing to electronically submit securities and forex orders to a broker for execution.");
+        assert_eq!(order_single.name(), "NewOrderSingle");
+        assert_eq!(order_single.msg_type(), "D");
+        assert_eq!(order_single.category(), "SingleGeneralOrderHandling");
+        assert_eq!(order_single.synopsis(), "The new order message type is used by institutions wishing to electronically submit securities and forex orders to a broker for execution.");
         let pedigree = order_single.pedigree();
-        assert!(pedigree.added == Some("FIX.2.7".to_string()));
-        assert!(pedigree.added_ep == None);
-        assert!(pedigree.updated == None);
-        assert!(pedigree.updated_ep == None);
-        assert!(pedigree.deprecated == None);
-        assert!(pedigree.deprecated_ep == None);
+        assert_eq!(pedigree.added, Some("FIX.2.7"));
+        assert_eq!(pedigree.added_ep, None);
+        assert_eq!(pedigree.updated, None);
+        assert_eq!(pedigree.updated_ep, None);
+        assert_eq!(pedigree.deprecated, None);
+        assert_eq!(pedigree.deprecated_ep, None);
     }
 
     #[test]
     fn orchestration_message_definitions() {
         let orchestration = &FIX_4_4::orchestration();
-        assert!(orchestration.messages().len() == 93);
+        assert_eq!(orchestration.messages().len(), 93);
         let heartbeat = &orchestration.messages()[0];
-        assert!(heartbeat.name() == "Heartbeat");
-        assert!(heartbeat.msg_type() == "0");
-        assert!(heartbeat.category() == "Session");
-        assert!(heartbeat.pedigree().added == Some("FIX.2.7".to_string()));
-        assert!(heartbeat.synopsis() == "The Heartbeat monitors the status of the communication link and identifies when the last of a string of messages was not received.");
-    }
-
-    #[test]
-    fn orchestration_msg_type_lookup_with_valid_msg_type() {
-        //let orchestration = &FIX_4_4::orchestration();let orchestration = &FIX_4_4::orchestration();
-        //let executionReport = &orchestration.messages()["8"]
-        // const auto& executionReport = orchestration.messages()["8"];
-        // REQUIRE(executionReport.name() == "ExecutionReport");
+        assert_eq!(heartbeat.name(), "Heartbeat");
+        assert_eq!(heartbeat.msg_type(), "0");
+        assert_eq!(heartbeat.category(), "Session");
+        assert_eq!(heartbeat.pedigree().added, Some("FIX.2.7"));
+        assert_eq!(heartbeat.synopsis(), "The Heartbeat monitors the status of the communication link and identifies when the last of a string of messages was not received.");
     }
 
     #[test]
@@ -156,52 +148,56 @@ mod tests {
     fn orchestration_message_fields() {
         let orchestration = &FIX_4_4::orchestration();
         let heartbeat = &orchestration.messages()[0];
-        assert!(heartbeat.fields().len() == 34);
+        assert_eq!(heartbeat.fields().len(), 34);
         let begin_string = &heartbeat.fields()[0];
-        assert!(begin_string.tag() == 8);
-        assert!(begin_string.name() == "BeginString".to_string());
-        assert!(begin_string.data_type() == "String".to_string());
-        assert!(begin_string.synopsis() == "Identifies beginning of new message and protocol version. ALWAYS FIRST FIELD IN MESSAGE. (Always unencrypted)".to_string());
-        assert!(begin_string.depth() == 0);
+        assert_eq!(begin_string.tag(), 8);
+        assert_eq!(begin_string.name(), "BeginString".to_string());
+        assert_eq!(begin_string.data_type(), "String".to_string());
+        assert_eq!(begin_string.synopsis(), "Identifies beginning of new message and protocol version. ALWAYS FIRST FIELD IN MESSAGE. (Always unencrypted)".to_string());
+        assert_eq!(begin_string.depth(), 0);
         assert!(begin_string.presence() == Presence::Required);
         let pedigree = begin_string.pedigree();
-        assert!(pedigree.added == Some("FIX.2.7".to_string()));
-        assert!(pedigree.added_ep == None);
-        assert!(pedigree.updated == None);
-        assert!(pedigree.updated_ep == None);
-        assert!(pedigree.deprecated == None);
-        assert!(pedigree.deprecated_ep == None);
+        assert_eq!(pedigree.added, Some("FIX.2.7"));
+        assert_eq!(pedigree.added_ep, None);
+        assert_eq!(pedigree.updated, None);
+        assert_eq!(pedigree.updated_ep, None);
+        assert_eq!(pedigree.deprecated, None);
+        assert_eq!(pedigree.deprecated_ep, None);
     }
 
     #[test]
     fn orchestration_lookup_message_name() {
-        // auto orchestration = crocofix::FIX_4_4::orchestration();
-        // REQUIRE(orchestration.messages().name_of_message("A") == "Logon");
-        // REQUIRE(orchestration.messages().name_of_message("ZZZZ").empty());
+        let orchestration = &FIX_4_4::orchestration();
+        let messages = orchestration.messages();
+        assert_eq!(messages.name_of_message("A"), Some("Logon"));
+        assert_eq!(messages.name_of_message("ZZZZ"), None);
     }
 
     #[test]
     fn orchestration_version_field_definitions() {
-        // auto orchestration = crocofix::FIX_4_4::orchestration();
-        // REQUIRE(orchestration.fields()[0].is_valid() == false);
-        // REQUIRE(orchestration.fields().size() == 913);
-        // REQUIRE(orchestration.fields()[54].is_valid() == true);
-        // REQUIRE(orchestration.fields()[54].tag() == 54);
+        let orchestration = &FIX_4_4::orchestration();
+        let fields = orchestration.fields();
+        assert!(fields[0].is_valid() == false);
+        assert_eq!(fields.len(), 913);
+        assert!(fields[54].is_valid());
+        assert_eq!(fields[54].tag(), 54);
     }
 
     #[test]
     fn orchestration_lookup_field_name() {
-        // auto orchestration = crocofix::FIX_4_4::orchestration();
-        // REQUIRE(orchestration.fields().name_of_field(100) == "ExDestination");
-        // REQUIRE(orchestration.fields().name_of_field(999999).empty());
+        let orchestration = &FIX_4_4::orchestration();
+        let fields = orchestration.fields();
+        assert_eq!(fields.name_of_field(100), Some("ExDestination"));
+        assert_eq!(fields.name_of_field(999999), None);
     }
 
     #[test]
     fn orchestration_lookup_field_value() {
-        // auto orchestration = crocofix::FIX_4_4::orchestration();
-        // REQUIRE(orchestration.fields().name_of_value(18, "G") == "AllOrNone");
-        // REQUIRE(orchestration.fields().name_of_value(999999, "1").empty());
-        // REQUIRE(orchestration.fields().name_of_value(999999, "54").empty());
+        let orchestration = &FIX_4_4::orchestration();
+        let fields = orchestration.fields();
+        assert_eq!(fields.name_of_value(18, "G"), Some("AllOrNone"));
+        assert_eq!(fields.name_of_value(999999, "1"), None);
+        assert_eq!(fields.name_of_value(999999, "54"), None);
     }
 
 }

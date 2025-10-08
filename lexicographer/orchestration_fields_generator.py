@@ -29,9 +29,9 @@ def generate_orchestration_fields(file, orchestration, module):
         file.write("impl crate::dictionary::VersionField for {} {{\n\n".format(field.name))
 
         file.write("    fn tag(&self) -> u32 {{ {} }}\n".format(field.id))
-        file.write("    fn name(&self) -> &str {{ \"{}\" }}\n".format(field.name))
-        file.write("    fn data_type(&self) -> &str {{ \"{}\" }}\n".format(field.type))
-        file.write("    fn synopsis(&self) -> &str {{ \"{}\" }}\n".format(sanitise(field.synopsis)))
+        file.write("    fn name(&self) -> &'static str {{ \"{}\" }}\n".format(field.name))
+        file.write("    fn data_type(&self) -> &'static str {{ \"{}\" }}\n".format(field.type))
+        file.write("    fn synopsis(&self) -> &'static str {{ \"{}\" }}\n".format(sanitise(field.synopsis)))
         
         file.write("    fn pedigree(&self) -> crate::dictionary::Pedigree {\n")
         file.write("        crate::dictionary::Pedigree {\n")

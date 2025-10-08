@@ -1,12 +1,13 @@
 use std::ops::Index;
+use std::collections::hash_map::HashMap;
 
 pub struct Pedigree {
-    pub added: Option<String>,
-    pub added_ep: Option<String>,
-    pub updated: Option<String>,
-    pub updated_ep: Option<String>,
-    pub deprecated: Option<String>,
-    pub deprecated_ep: Option<String>
+    pub added: Option<&'static str>,
+    pub added_ep: Option<&'static str>,
+    pub updated: Option<&'static str>,
+    pub updated_ep: Option<&'static str>,
+    pub deprecated: Option<&'static str>,
+    pub deprecated_ep: Option<&'static str>
 }
 
 pub struct FieldValue {
@@ -17,9 +18,9 @@ pub struct FieldValue {
 
 pub trait VersionField {
     fn tag(&self) -> u32;
-    fn name(&self) -> &str;
-    fn data_type(&self) -> &str;
-    fn synopsis(&self) -> &str;
+    fn name(&self) -> &'static str;
+    fn data_type(&self) -> &'static str;
+    fn synopsis(&self) -> &'static str;
     fn pedigree(&self) -> crate::dictionary::Pedigree { 
         crate::dictionary::Pedigree {
             added: None,
@@ -35,11 +36,11 @@ pub trait VersionField {
 
     // Return the name of an enumerated value if it is defined for this field e.g. 1 -> 'Buy' for Side.
     // Returns an empty string if no such value is defined.
-    fn name_of_value(&self, value: &str) -> String
+    fn name_of_value(&self, value: &str) -> Option<&'static str>
     {
-        return match self.values().into_iter().find(|&item| item.value == value) {
-            None => "".to_string(),
-            Some(entry) => entry.name.to_string()
+        match self.values().into_iter().find(|&item| item.value == value) {
+            None => None,
+            Some(entry) => Some(entry.name)
         }
     }
 
@@ -51,9 +52,9 @@ pub struct InvalidField {
 impl crate::dictionary::VersionField for InvalidField {
 
     fn tag(&self) -> u32 { 0 }
-    fn name(&self) -> &str { "" }
-    fn data_type(&self) -> &str { "" }
-    fn synopsis(&self) -> &str { "" }
+    fn name(&self) -> &'static str { "" }
+    fn data_type(&self) -> &'static str { "" }
+    fn synopsis(&self) -> &'static str { "" }
     
     fn pedigree(&self) -> crate::dictionary::Pedigree {
         crate::dictionary::Pedigree {
@@ -79,34 +80,33 @@ pub struct VersionFieldCollection {
 
     offsets: Vec<usize>,
     fields: Vec<Box<dyn VersionField>>
-
 }
 
 impl VersionFieldCollection {
 
-    pub fn new(offsets: Vec<usize>, fields: Vec<Box<dyn VersionField>>) -> Self 
+    pub fn new(offsets: Vec<usize>, fields: Vec<Box<dyn VersionField>>) -> Self
     {
         Self { offsets, fields }
     }
 
-    pub fn name_of_field(&self, tag: usize) -> String 
-    {
-        if tag < self.offsets.len() {
-            let offset = self.offsets[tag];
-            return self.fields[offset].name().to_string()
-        }
-
-        return String::new()
+    pub fn len(&self) -> usize {
+        self.fields.len()
     }
 
-    pub fn name_of_value(&self, tag: usize, value: &str) -> String 
+    pub fn name_of_field(&self, tag: usize) -> Option<&'static str> 
     {
-        if tag < self.offsets.len() {
-            let offset = self.offsets[tag];
-            return self.fields[offset].name_of_value(value).to_string()
-        }
+        self.offsets
+            .get(tag)
+            .and_then(|&offset| self.fields.get(offset))
+            .map(|field| field.name())
+    }
 
-        return String::new()
+    pub fn name_of_value(&self, tag: usize, value: &str) -> Option<&'static str> 
+    {
+        self.offsets
+            .get(tag)
+            .and_then(|&offset| self.fields.get(offset))
+            .and_then(|field| field.name_of_value(value))
     }
 
 }
@@ -165,10 +165,10 @@ unsafe impl Send for MessageField {}
 
 pub trait Message
 {
-    fn name(&self) -> &str;
-    fn msg_type(&self) -> &str;
-    fn category(&self) -> &str;
-    fn synopsis(&self) -> &str;
+    fn name(&self) -> &'static str;
+    fn msg_type(&self) -> &'static str;
+    fn category(&self) -> &'static str;
+    fn synopsis(&self) -> &'static str;
     fn pedigree(&self) -> crate::dictionary::Pedigree {
         crate::dictionary::Pedigree {
             added: None,
@@ -184,7 +184,8 @@ pub trait Message
 
 pub struct VersionMessageCollection {
 
-    messages: Vec<Box<dyn Message>>
+    messages: Vec<Box<dyn Message>>,
+    messages_by_msg_type: HashMap<&'static str, usize>
 
 }
 
@@ -192,13 +193,30 @@ impl VersionMessageCollection {
 
     pub fn new(messages: Vec<Box<dyn Message>>) -> Self 
     {
-        Self { messages }
+        let messages_by_msg_type = messages
+            .iter()
+            .enumerate()
+            .map(|(index, msg)| (msg.msg_type(), index))
+            .collect();
+        
+        Self {
+            messages,
+            messages_by_msg_type,
+        }
     }
 
     pub fn len(&self) -> usize {
         self.messages.len()
     }
 
+    pub fn name_of_message(&self, msg_type: &str) -> Option<&'static str> 
+    {
+        self.messages_by_msg_type
+            .get(msg_type)
+            .and_then(|&index| self.messages.get(index))
+            .map(|message| message.name())
+   }
+   
 }
 
 unsafe impl Sync for VersionMessageCollection {}
