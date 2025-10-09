@@ -27,13 +27,13 @@ def generate_orchestration_messages(file, orchestration, module):
         file.write("        }\n")
         file.write("    }\n")
 
-        file.write("    fn fields(&self) -> &'static Vec<Box<crate::dictionary::MessageField>> {\n")
-        file.write("        static VALUES: std::sync::OnceLock<Vec<Box<crate::dictionary::MessageField>>> = std::sync::OnceLock::new();\n")
+        file.write("    fn fields(&self) -> &'static Vec<crate::dictionary::MessageField> {\n")
+        file.write("        static VALUES: std::sync::OnceLock<Vec<crate::dictionary::MessageField>> = std::sync::OnceLock::new();\n")
         file.write("        VALUES.get_or_init(|| {\n")
         file.write("            vec![\n")
 
         for field in orchestration.message_fields(message):
-            file.write("                Box::new(crate::dictionary::MessageField::new(Box::new(crate::{}::{}{{}}), {}, {})),\n".format(module, field.field.name, format_presence(field.presence), field.depth))
+            file.write("                crate::dictionary::MessageField::new(Box::new(crate::{}::{}{{}}), {}, {}),\n".format(module, field.field.name, format_presence(field.presence), field.depth))
 
         file.write("            ]\n")
         file.write("        })\n")

@@ -29,7 +29,7 @@ fn generate_orchestration_types(program: &PathBuf, orchestration: PathBuf, modul
     println!("cargo::rerun-if-changed={}", orchestration.to_str().unwrap());
 
     let out_dir = env::var_os("OUT_DIR").unwrap();
-    let filename = format!("{}.rs", module);
+    let filename = format!("{module}.rs");
     let output = Path::new(&out_dir).join(&filename);
 
     let output = Command::new(program)

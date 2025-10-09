@@ -1,7 +1,3 @@
-use dictionary::Message;
-use dictionary::Orchestration;
-use dictionary::Presence;
-
 pub mod dictionary;
 
 include!(concat!(env!("OUT_DIR"), "/FIX_4_2.rs"));
@@ -11,6 +7,10 @@ include!(concat!(env!("OUT_DIR"), "/FIX_5_0SP2.rs"));
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use dictionary::Message;
+    use dictionary::Orchestration;
+    use dictionary::Presence;
 
     #[test]
     fn value_definitions_4_2() {

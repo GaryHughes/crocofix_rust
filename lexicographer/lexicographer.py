@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     with open(args.output, 'w') as file:
         file.write("#[allow(non_snake_case)]\n")
-        file.write("#[allow(dead_code)]\n\n")
+        file.write("#[allow(dead_code)]\n")
         file.write("pub mod {} {{\n\n".format(args.module))
 
         generate_orchestration_fields(file, orchestration, args.module)

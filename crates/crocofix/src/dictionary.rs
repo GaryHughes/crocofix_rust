@@ -38,7 +38,7 @@ pub trait VersionField {
     // Returns an empty string if no such value is defined.
     fn name_of_value(&self, value: &str) -> Option<&'static str>
     {
-        match self.values().into_iter().find(|&item| item.value == value) {
+        match self.values().iter().find(|&item| item.value == value) {
             None => None,
             Some(entry) => Some(entry.name)
         }
@@ -91,6 +91,10 @@ impl VersionFieldCollection {
 
     pub fn len(&self) -> usize {
         self.fields.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.fields.is_empty()
     }
 
     pub fn name_of_field(&self, tag: usize) -> Option<&'static str> 
@@ -179,7 +183,7 @@ pub trait Message
             deprecated_ep: None
         } 
     } 
-    fn fields(&self) -> &'static Vec<Box<crate::dictionary::MessageField>>;
+    fn fields(&self) -> &'static Vec<crate::dictionary::MessageField>;
 }
 
 pub struct VersionMessageCollection {
@@ -209,6 +213,10 @@ impl VersionMessageCollection {
         self.messages.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.messages.is_empty()
+    }
+
     pub fn name_of_message(&self, msg_type: &str) -> Option<&'static str> 
     {
         self.messages_by_msg_type
@@ -236,6 +244,7 @@ impl Index<usize> for VersionMessageCollection {
 
 pub trait Orchestration
 {
+    fn name(&self) -> &'static str;
     fn fields(&self) -> &'static VersionFieldCollection;
     fn messages(&self) -> &'static VersionMessageCollection;
 }
