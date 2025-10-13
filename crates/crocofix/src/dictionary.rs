@@ -1,5 +1,6 @@
 use std::ops::Index;
 use std::collections::hash_map::HashMap;
+use core::fmt::Debug;
 
 pub struct Pedigree {
     pub added: Option<&'static str>,
@@ -44,6 +45,12 @@ pub trait VersionField {
         }
     }
 
+}
+
+impl Debug for dyn VersionField {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "VersionField {{ name: \"{}\", tag: {} }}", self.name(), self.tag())
+    }
 }
 
 pub struct InvalidField {
