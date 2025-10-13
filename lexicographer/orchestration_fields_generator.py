@@ -10,20 +10,23 @@ def generate_orchestration_fields(file, orchestration, module):
         file.write("pub struct {} {{\n".format(field.name))
         file.write("}\n\n")
 
+        file.write("impl {} {{\n".format(field.name))
+        file.write("    pub const TAG: u32 = {};\n".format(field.id))
+
         try:
             code_set = orchestration.code_sets[field.type]
             if len(code_set.codes) > 0:
-                file.write("impl {} {{\n".format(field.name))
                 file.write('\n')
                 for code in code_set.codes:
                     file.write("    pub fn {}() -> &'static crate::dictionary::FieldValue {{\n".format(code.name))
                     file.write("        static VALUE: crate::dictionary::FieldValue = crate::dictionary::FieldValue {{ tag: {}, name: \"{}\", value: \"{}\" }};\n".format(field.id, code.name, code.value))
                     file.write("        &VALUE\n")
                     file.write("    }\n\n")
-                file.write("}\n\n")
         except KeyError:
             # TODO - maybe check that its an expected built in type
             pass
+
+        file.write("}\n\n")
 
    
         file.write("impl crate::dictionary::VersionField for {} {{\n\n".format(field.name))
