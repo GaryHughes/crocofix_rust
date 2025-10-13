@@ -1,4 +1,7 @@
 pub mod dictionary;
+pub mod field;
+pub mod message;
+pub mod error;
 
 include!(concat!(env!("OUT_DIR"), "/FIX_4_2.rs"));
 include!(concat!(env!("OUT_DIR"), "/FIX_4_4.rs"));
@@ -198,6 +201,14 @@ mod tests {
         assert_eq!(fields.name_of_value(18, "G"), Some("AllOrNone"));
         assert_eq!(fields.name_of_value(999999, "1"), None);
         assert_eq!(fields.name_of_value(999999, "54"), None);
+    }
+
+    #[test]
+    fn version_field_debug() {
+        let orchestration = FIX_4_4::orchestration();
+        let field = &orchestration.fields()[1];
+        let debug = format!("{:?}", field);
+        assert_eq!("VersionField { name: \"Account\", tag: 1 }", debug);
     }
 
 }
