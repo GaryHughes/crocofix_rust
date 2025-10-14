@@ -1,8 +1,5 @@
 use crate::field::Field;
 use crate::error::Error;
-// use crate::FIX_5_0SP2::orchestration as FIX_5_0SP2;
-// use crate::dictionary::Orchestration;
-use crate::dictionary::VersionField;
 use std::fmt;
 use bitflags::bitflags;
 
@@ -64,22 +61,57 @@ impl Message {
 
             let tag: u32 = std::str::from_utf8(tag_bytes)
                 .map_err(|error| Error::InvalidUtf8(error))
-                .and_then(|string| string.parse().map_err(|error| Error::TagParseFailed))?;
+                // TODO - include parse context
+                .and_then(|string| string.parse().map_err(|_error| Error::TagParseFailed(string.to_string())))?;
 
-            
-            let separator_index = match buffer[equals_index + 1..].iter().position(|&byte| byte == FIELD_SEPARATOR) {
-                Some(position) => equals_index + 1 + position,
-                None => break,
-            };
+            if Message::is_data_field(tag) 
+            {
+                let Some(last_field) = self.fields.last() else {
+                    // TODO - include parse context
+                    return Err(Error::DataFieldWithNoPrecedingSizeField);
+                };
 
-            let value_index = equals_index + 1;
-            let value_len = separator_index - value_index;
-            let value_bytes = &buffer[value_index..value_index + value_len];
-            let value = std::str::from_utf8(value_bytes).map_err(|error| Error::InvalidUtf8(error))?;
+                // TODO - include parse context
+                let length: usize = last_field.value.parse().map_err(|_error| Error::DataFieldWithNonNumericPreviousField(format!("{}", last_field)))?;
+                    
+                let value_start_index = equals_index + 1;
+                let value_end_index = equals_index + length + 1;
 
-            self.fields.push(Field { tag, value: value.to_string() });
+                if value_end_index >= buffer.len() {
+                    break
+                }
 
-            current_index = separator_index + 1;
+                let value_bytes = &buffer[value_start_index..value_end_index];
+                
+                if buffer[value_end_index] != FIELD_SEPARATOR {
+                    // TODO - include parse context
+                    return Err(Error::DataFieldWithNoTrailingSeparator);
+                }
+
+                // TODO - include parse context
+                let value = std::str::from_utf8(value_bytes).map_err(|error| Error::InvalidUtf8(error))?;
+
+                // TODO - think about replacing value with an enum with cases or various types. Not sure about the validity of packing a data field in a string which is ok in C++.
+                self.fields.push(Field { tag, value: value.to_string() });
+
+                current_index = value_end_index + 1;
+            }
+            else 
+            {
+                let separator_index = match buffer[equals_index + 1..].iter().position(|&byte| byte == FIELD_SEPARATOR) {
+                    Some(position) => equals_index + 1 + position,
+                    None => break,
+                };
+
+                let value_index = equals_index + 1;
+                let value_len = separator_index - value_index;
+                let value_bytes = &buffer[value_index..value_index + value_len];
+                let value = std::str::from_utf8(value_bytes).map_err(|error| Error::InvalidUtf8(error))?;
+
+                self.fields.push(Field { tag, value: value.to_string() });
+
+                current_index = separator_index + 1;
+            }
 
             if tag == crate::FIX_5_0SP2::CheckSum::TAG {
                 complete = true;
@@ -88,103 +120,6 @@ impl Message {
 
             checksum_index = current_index;
         }
-
-        /*
-        let mut current_idx = 0;
-        let mut checksum_idx = 0;
-        let buffer_len = buffer.len();
-        let mut complete = false;
-
-        while current_idx < buffer_len {
-            // Find the '=' separator
-            let equals_pos = match buffer[current_idx..].iter().position(|&b| b == VALUE_SEPARATOR) {
-                Some(pos) => current_idx + pos,
-                None => break,
-            };
-
-            // Parse the tag
-            let tag_bytes = &buffer[current_idx..equals_pos];
-            let tag_str = std::str::from_utf8(tag_bytes)
-                .map_err(|_| "Invalid UTF-8 in tag".to_string())?;
-            let tag = i32::from_str(tag_str)
-                .map_err(|_| format!("{} is not a valid field tag", tag_str))?;
-
-            // Check if this is a data field
-            if self.is_data_field(tag) {
-                if self.fields.is_empty() {
-                    return Err(format!(
-                        "parsed a data field with tag={} that was not preceeded by a length field",
-                        tag
-                    ));
-                }
-
-                // Get length from previous field
-                let length = self.fields.last()
-                    .and_then(|f| usize::from_str(f.value()).ok())
-                    .ok_or_else(|| format!(
-                        "parsed a data field with tag={} but the preceeding field value was not a valid numeric length",
-                        tag
-                    ))?;
-
-                let field_end_idx = equals_pos + length + 1;
-                if field_end_idx >= buffer_len {
-                    break;
-                }
-
-                // Extract value
-                let value_start = equals_pos + 1;
-                let value = &buffer[value_start..value_start + length];
-                
-                // Check for field separator
-                if buffer[field_end_idx] != FIELD_SEPARATOR {
-                    return Err(format!(
-                        "parsed a data field with tag={} but the field did not have a trailing field separator",
-                        tag
-                    ));
-                }
-
-                let value_str = std::str::from_utf8(value)
-                    .map_err(|_| "Invalid UTF-8 in data field value".to_string())?;
-                self.fields.push(Field {
-                    tag,
-                    value: value_str.to_string(),
-                });
-
-                // +1 for field separator, +1 to move to next tag
-                current_idx = field_end_idx + 1;
-            } else {
-                // Find the field separator
-                let delimiter_pos = match buffer[equals_pos + 1..].iter().position(|&b| b == FIELD_SEPARATOR) {
-                    Some(pos) => equals_pos + 1 + pos,
-                    None => break,
-                };
-
-                // Extract value
-                let value_start = equals_pos + 1;
-                let value_len = delimiter_pos - value_start;
-                let value = &buffer[value_start..value_start + value_len];
-                let value_str = std::str::from_utf8(value)
-                    .map_err(|_| "Invalid UTF-8 in field value".to_string())?;
-                
-                self.fields.push(Field {
-                    tag,
-                    value: value_str.to_string(),
-                });
-
-                // +1 to move past delimiter
-                current_idx = delimiter_pos + 1;
-            }
-
-            // Check if we've reached the checksum field
-            if tag == CHECKSUM_TAG {
-                complete = true;
-                break;
-            }
-
-            // Update checksum index
-            checksum_idx = current_idx;
-        }
-        */
 
         self.decode_checksum += buffer[..checksum_index].iter().map(|&byte| byte as u32).sum::<u32>();
     
@@ -203,6 +138,12 @@ impl Message {
     pub fn encode(&self, buffer: &mut Vec<u8>, options: EncodeOptions) -> Result<usize, Error>
     {
         Ok(0)
+    }
+
+    pub fn is_data_field(tag: u32) -> bool
+    {
+        // TODO - think about what we do for unknown tags here. Is it better to continue and assume non data or error? The C++ version should be aligned.
+        crate::FIX_5_0SP2::fields()[tag as usize].is_data()
     }
 
     pub fn is_admin(&self) -> bool {
@@ -226,6 +167,8 @@ impl fmt::Display for Message {
 mod tests {
 
     use super::*;
+
+    // TODO - tests to validate the computed checksum
  
     #[test]
     fn decode_a_complete_message() -> Result<(), crate::error::Error>
@@ -394,60 +337,60 @@ mod tests {
     #[test]
     fn decode_a_message_with_a_data_field_that_has_no_preceeding_size_field() -> Result<(), crate::error::Error>
     {
-        // let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}89=123\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
-        // let mut message = Message::default();
-        // assert_eq!(message.decode(text.as_bytes()), Err(crate::error::Error::DataFieldWithNoPrecedingSizeField));
+        let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}89=123\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
+        let mut message = Message::default();
+        assert_eq!(message.decode(text.as_bytes()), Err(crate::error::Error::DataFieldWithNonNumericPreviousField("35=D".to_string())));
         Ok(())
     }
 
     #[test]
     fn decode_a_message_with_a_data_field_with_a_non_numeric_previous_field_value() -> Result<(), crate::error::Error>
     {
-        // let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}89=123\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
-        // let mut message = Message::default();
-        // assert_eq!(message.decode(text.as_bytes()), Err(crate::error::Error::DataFieldWithNonNumericPreviousField));
+        let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}89=123\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
+        let mut message = Message::default();
+        assert_eq!(message.decode(text.as_bytes()), Err(crate::error::Error::DataFieldWithNonNumericPreviousField("35=D".to_string())));
         Ok(())
     }
 
     #[test]
     fn decode_a_message_with_a_data_field_that_does_not_have_a_trailing_field_separator() -> Result<(), crate::error::Error>
     {
-        // let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}93=3\u{0001}89=AAA49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
-        // let mut message = Message::default();
-        // assert_eq!(message.decode(text.as_bytes()), Err(crate::error::Error::DataFieldWithNoTrailingSeparator));
+        let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}93=3\u{0001}89=AAA49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
+        let mut message = Message::default();
+        assert_eq!(message.decode(text.as_bytes()), Err(crate::error::Error::DataFieldWithNoTrailingSeparator));
         Ok(())
     }
 
     #[test]
     fn decode_a_message_containing_a_data_field() -> Result<(), crate::error::Error>
     {
-        // let signature = "ABCDEF\u{0001}ABCDEFABC\u{0001}DEF";
-        // let text = "8=FIX.4.4\u{0001}9=167\u{0001}35=D\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}93=20\u{0001}89=ABCDEF\u{0001}ABCDEFABC\u{0001}DEF\u{0001}10=220\u{0001}";
-        // let mut message = Message::default();
-        // let result = message.decode(text.as_bytes())?;
-        // assert!(result.complete);
-        // assert_eq!(message.fields.len(), 20);
-        // assert_eq!(message.fields[18].value.len(), signature.len());
-        // assert_eq!(signature, message.fields[18].value);
+        let signature = "ABCDEF\u{0001}ABCDEFABC\u{0001}DEF";
+        let text = "8=FIX.4.4\u{0001}9=167\u{0001}35=D\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}93=20\u{0001}89=ABCDEF\u{0001}ABCDEFABC\u{0001}DEF\u{0001}10=220\u{0001}";
+        let mut message = Message::default();
+        let result = message.decode(text.as_bytes())?;
+        assert!(result.complete);
+        assert_eq!(message.fields.len(), 20);
+        assert_eq!(signature, message.fields[18].value);
+        assert_eq!(message.fields[18].value.len(), signature.len());
         Ok(())
     }
 
     #[test]
     fn decode_a_message_containing_a_data_field_in_two_pieces() -> Result<(), crate::error::Error>
     {
-        // let signature = "ABCDEF\u{0001}ABCDEFABC\u{0001}DEF";
-        // let one = "8=FIX.4.4\u{0001}9=167\u{0001}35=D\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}93=20\u{0001}89=ABCDEF\u{0001}ABCDE";
-        // let two = "89=ABCDEF\u{0001}ABCDEFABC\u{0001}DEF\u{0001}10=220\u{0001}";
-        // let mut message = Message::default();
-        // let one_result = message.decode(one.as_bytes())?;
-        // assert!(!one_result.complete);
-        // assert_eq!(one_result.consumed, one.len() - "89=ABCDEF\u{0001}ABCDE".len());
-        // assert_eq!(message.fields.len(), 18);
-        // let two_result = message.decode(two.as_bytes())?;
-        // assert!(two_result.complete);
-        // assert_eq!(message.fields.len(), 20);
-        // assert_eq!(message.fields[18].value.len(), signature.len());
-        // assert_eq!(signature, message.fields[18].value);
+        let signature = "ABCDEF\u{0001}ABCDEFABC\u{0001}DEF";
+        let one = "8=FIX.4.4\u{0001}9=167\u{0001}35=D\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}93=20\u{0001}89=ABCDEF\u{0001}ABCDE";
+        let two = "89=ABCDEF\u{0001}ABCDEFABC\u{0001}DEF\u{0001}10=220\u{0001}";
+        let mut message = Message::default();
+        let one_result = message.decode(one.as_bytes())?;
+        assert!(!one_result.complete);
+        assert_eq!(one_result.consumed, one.len() - "89=ABCDEF\u{0001}ABCDE".len());
+        assert_eq!(message.fields.len(), 18);
+        let two_result = message.decode(two.as_bytes())?;
+        assert!(two_result.complete);
+        assert_eq!(message.fields.len(), 20);
+        assert_eq!(message.fields[18].value.len(), signature.len());
+        assert_eq!(signature, message.fields[18].value);
         Ok(())
     }
 

@@ -4,10 +4,10 @@ use std::io;
 pub enum Error {
     IoError,
     DataFieldWithNoPrecedingSizeField,
-    DataFieldWithNonNumericPreviousField,
+    DataFieldWithNonNumericPreviousField(String),
     DataFieldWithNoTrailingSeparator,
     InvalidUtf8(std::str::Utf8Error),
-    TagParseFailed
+    TagParseFailed(String)
 }
 
 impl From<io::Error> for Error {
