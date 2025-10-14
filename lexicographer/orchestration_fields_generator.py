@@ -7,6 +7,16 @@ def generate_orchestration_fields(file, orchestration, module):
 
     for field in sorted_fields:
 
+        try:
+            data_type = orchestration.data_types[field.type]
+        except:
+            data_type = orchestration.code_sets[field.type]
+            
+        if data_type.name == 'data':
+            is_data = 'true'
+        else:
+            is_data = 'false'
+
         file.write("pub struct {} {{\n".format(field.name))
         file.write("}\n\n")
 
@@ -32,6 +42,7 @@ def generate_orchestration_fields(file, orchestration, module):
         file.write("impl crate::dictionary::VersionField for {} {{\n\n".format(field.name))
 
         file.write("    fn tag(&self) -> u32 {{ {} }}\n".format(field.id))
+        file.write("    fn is_data(&self) -> bool {{ {} }}\n".format(is_data))
         file.write("    fn name(&self) -> &'static str {{ \"{}\" }}\n".format(field.name))
         file.write("    fn data_type(&self) -> &'static str {{ \"{}\" }}\n".format(field.type))
         file.write("    fn synopsis(&self) -> &'static str {{ \"{}\" }}\n".format(sanitise(field.synopsis)))

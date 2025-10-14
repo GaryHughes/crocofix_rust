@@ -19,6 +19,7 @@ pub struct FieldValue {
 
 pub trait VersionField {
     fn tag(&self) -> u32;
+    fn is_data(&self) -> bool;
     fn name(&self) -> &'static str;
     fn data_type(&self) -> &'static str;
     fn synopsis(&self) -> &'static str;
@@ -59,6 +60,7 @@ pub struct InvalidField {
 impl crate::dictionary::VersionField for InvalidField {
 
     fn tag(&self) -> u32 { 0 }
+    fn is_data(&self) -> bool { false }
     fn name(&self) -> &'static str { "" }
     fn data_type(&self) -> &'static str { "" }
     fn synopsis(&self) -> &'static str { "" }
@@ -119,7 +121,6 @@ impl VersionFieldCollection {
             .and_then(|&offset| self.fields.get(offset))
             .and_then(|field| field.name_of_value(value))
     }
-
 }
 
 unsafe impl Sync for VersionFieldCollection {}
