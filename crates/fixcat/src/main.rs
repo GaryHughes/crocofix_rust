@@ -57,7 +57,10 @@ fn decode_and_print_line(line: &String, options: &Options) -> Result<(), crocofi
         let mut message = Message::default();
         let result = message.decode(suffix.as_bytes())?;
         if result.consumed > 0 {
-            println!("{}", message);
+            if !options.admin && message.is_admin() {
+                return Ok(());
+            }
+            println!("{}\n", message);
         }
     }
     else {

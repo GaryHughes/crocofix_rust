@@ -7,7 +7,8 @@ pub enum Error {
     DataFieldWithNonNumericPreviousField(String),
     DataFieldWithNoTrailingSeparator,
     InvalidUtf8(std::str::Utf8Error),
-    TagParseFailed(String)
+    TagParseFailed(String),
+    MessageDoesNotContainMsgType
 }
 
 impl From<io::Error> for Error {

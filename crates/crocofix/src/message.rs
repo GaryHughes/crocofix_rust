@@ -146,17 +146,94 @@ impl Message {
         crate::FIX_5_0SP2::fields()[tag as usize].is_data()
     }
 
-    pub fn is_admin(&self) -> bool {
+    pub fn is_admin(&self) -> bool 
+    {
+        let Some(msg_type) = self.msg_type() else {
+            return false;
+        };
+
+        if msg_type == crate::FIX_5_0SP2::message::Logon::MSG_TYPE ||
+           msg_type == crate::FIX_5_0SP2::message::Heartbeat::MSG_TYPE ||
+           msg_type == crate::FIX_5_0SP2::message::TestRequest::MSG_TYPE ||
+           msg_type == crate::FIX_5_0SP2::message::ResendRequest::MSG_TYPE ||
+           msg_type == crate::FIX_5_0SP2::message::Reject::MSG_TYPE ||
+           msg_type == crate::FIX_5_0SP2::message::SequenceReset::MSG_TYPE ||
+           msg_type == crate::FIX_5_0SP2::message::Logout::MSG_TYPE ||
+           msg_type == crate::FIX_5_0SP2::message::Logon::MSG_TYPE ||
+           msg_type == crate::FIX_5_0SP2::message::XMLnonFIX::MSG_TYPE
+        {
+            return true;
+        }
+
         false
+    }
+
+    pub fn msg_type(&self) -> Option<&str> 
+    {
+        if let Some(field) = self.fields.iter().find(|field| field.tag == crate::FIX_5_0SP2::MsgType::TAG) {
+            return Some(field.value.as_str());
+        }
+
+        None
+    }
+
+    fn message_name(&self) -> &'static str
+    {
+        let Some(msg_type) = self.msg_type() else {
+            return "<unknown>";
+        };
+
+        let Some(name) = crate::FIX_5_0SP2::messages().name_of_message(msg_type) else {
+            return "<unknown>";
+        };
+
+        name
     }
 
 }
 
 impl fmt::Display for Message {
-    
+
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result
     {
-        write!(formatter, "FIX MESSAGE")?;
+        let mut widest_tag = 0;
+        let mut widest_field_name = 0;
+
+        for field in &self.fields {
+            if let Some(name) = crate::FIX_5_0SP2::fields().name_of_field(field.tag as usize) {
+                widest_field_name = widest_field_name.max(name.len());
+            }
+            let tag_width = format!("{}", field.tag).len();
+            widest_tag = widest_tag.max(tag_width);
+        }
+
+        write!(formatter, "{}\n{{\n", self.message_name())?;
+
+        // BodyLength ( 9) 61
+        //    MsgType (35) 0 - Heartbeat
+        for field in self.fields.iter() {
+
+            let name = crate::FIX_5_0SP2::fields().name_of_field(field.tag as usize).unwrap_or("");
+
+            write!(
+                formatter,
+                "{:>width_name$} ({:>width_tag$}) {}",
+                name,
+                field.tag,
+                field.value,
+                width_name = widest_field_name,
+                width_tag = widest_tag
+            )?;
+
+            if let Some(name_of_value) = crate::FIX_5_0SP2::fields().name_of_value(field.tag as usize, field.value.as_str()) {
+                write!(formatter, " - {}", name_of_value)?;
+            }
+
+            write!(formatter, "\n")?;
+        };
+        
+        write!(formatter, "}}")?;
+
         Ok(())
     }
 
@@ -217,54 +294,49 @@ mod tests {
     #[test]
     fn invalid_tag() -> Result<(), crate::error::Error>
     {
-        /*
-        crocofix::message message;
-        REQUIRE_THROWS_AS(message.decode("A=FIX.4.4"), std::out_of_range);
-        */
+        let text = "A=FIX.4.4";
+        let mut message = Message::default();
+        assert_eq!(message.decode(text.as_bytes()), Err(crate::error::Error::TagParseFailed("A".to_string())));
         Ok(())
     }
 
     #[test]
     fn msg_type_lookup_fails_for_a_message_with_no_msg_type() -> Result<(), crate::error::Error>
     {
-        /*
-        const std::string text = "8=FIX.4.4\u{0001}9=149\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
-        crocofix::message message;
-        message.decode(text);
-        REQUIRE_THROWS(message.MsgType());
-        */
+        let text = "8=FIX.4.4\u{0001}9=149\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
+        let mut message = Message::default();
+        message.decode(text.as_bytes())?;
+        assert_eq!(message.msg_type(), None);
         Ok(())
     }
 
     #[test]
     fn msg_type_lookup() -> Result<(), crate::error::Error>
     {
-        /*
-        const std::string text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
-        crocofix::message message;
-        message.decode(text);
-        REQUIRE(message.MsgType() == "D");
-        */
+        let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
+        let mut message = Message::default();
+        message.decode(text.as_bytes())?;
+        assert_eq!(message.msg_type(), Some("D"));
         Ok(())
     }
 
     #[test]
     fn is_admin_is_false_for_a_non_admin_message() -> Result<(), crate::error::Error>
     {
-        // let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
-        // let mut message = Message::default();
-        // message.decode(text.as_bytes())?;
-        // assert!(!message.is_admin());        
+        let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=D\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
+        let mut message = Message::default();
+        message.decode(text.as_bytes())?;
+        assert!(!message.is_admin());        
         Ok(())
     }
 
     #[test]
     fn is_admin_is_true_for_an_admin_message() -> Result<(), crate::error::Error>
     {
-        // let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=A\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
-        // let mut message = Message::default();
-        // message.decode(text.as_bytes())?;
-        // assert!(message.is_admin());        
+        let text = "8=FIX.4.4\u{0001}9=149\u{0001}35=A\u{0001}49=INITIATOR\u{0001}56=ACCEPTOR\u{0001}34=2752\u{0001}52=20200114-08:13:20.041\u{0001}11=61\u{0001}70=60\u{0001}100=AUTO\u{0001}55=BHP.AX\u{0001}54=1\u{0001}60=20200114-08:12:59.397\u{0001}38=10000\u{0001}40=2\u{0001}44=20\u{0001}59=1\u{0001}10=021\u{0001}";
+        let mut message = Message::default();
+        message.decode(text.as_bytes())?;
+        assert!(message.is_admin());        
         Ok(())
     }
 
