@@ -11,6 +11,10 @@ def generate_orchestration_messages(file, orchestration, module):
         file.write("pub struct {} {{\n".format(message.name))
         file.write("}\n\n")
 
+        file.write("impl {} {{\n".format(message.name))
+        file.write("    pub const MSG_TYPE: &'static str = \"{}\";\n".format(message.msg_type))
+        file.write("}\n\n")
+
         file.write("impl crate::dictionary::Message for {} {{\n".format(message.name))
         file.write("    fn name(&self) -> &'static str {{ \"{}\" }}\n".format(message.name))
         file.write("    fn msg_type(&self) -> &'static str {{ \"{}\" }}\n".format(message.msg_type))
