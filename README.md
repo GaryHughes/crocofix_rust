@@ -2,7 +2,9 @@
 
 # CrocoFIX
 
+CrocoFIX is a Rust implementation of the [FIX protocol](https://www.fixtrading.org/online-specification/). CrocoFIX contains a rich data dictionary generated from the [FIX Orchestra standard](https://www.fixtrading.org/standards/fix-orchestra/).
 
+This project is starting out as a fairly mechanical port of the [C++ CrocoFIX](https://github.com/GaryHughes/crocofix) implementation as an exercise to improve my Rust. It is expected to diverge in future as I become more familiar with the language.
 
 # Orchestrations
 
