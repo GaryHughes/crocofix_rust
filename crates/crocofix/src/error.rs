@@ -8,7 +8,13 @@ pub enum Error {
     DataFieldWithNoTrailingSeparator,
     InvalidUtf8(std::str::Utf8Error),
     TagParseFailed(String),
-    MessageDoesNotContainMsgType
+    MessageDoesNotContainMsgType,
+    UnknownOrder(String),
+    MessageDoesNotContainFieldWithTag(u32),
+    UnsupportedMsgType(String),
+    OrderIndexOutOfRange(usize),
+    OrderBookAlreadyContainsOrderWithKey(String),
+    OrderBookDoesNotContainOrderWithKey(String)
 }
 
 impl From<io::Error> for Error {

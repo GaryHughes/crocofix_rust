@@ -1,5 +1,6 @@
 use crate::field::Field;
 use crate::error::Error;
+use crate::field_collection::{FieldCollection, SetOperation};
 use std::fmt;
 use bitflags::bitflags;
 
@@ -25,11 +26,10 @@ bitflags! {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Message {
 
-    // TODO - Vec is a placeholder for a specialised collection
-    pub fields: Vec<Field>,
+    pub fields: FieldCollection,
     decode_checksum: u32,
     decode_checksum_valid: bool
 
@@ -92,7 +92,7 @@ impl Message {
                 let value = std::str::from_utf8(value_bytes).map_err(|error| Error::InvalidUtf8(error))?;
 
                 // TODO - think about replacing value with an enum with cases or various types. Not sure about the validity of packing a data field in a string which is ok in C++.
-                self.fields.push(Field { tag, value: value.to_string() });
+                self.fields.set(&Field::from_str(tag, value), SetOperation::Append);
 
                 current_index = value_end_index + 1;
             }

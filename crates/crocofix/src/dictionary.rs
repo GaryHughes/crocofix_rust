@@ -11,6 +11,7 @@ pub struct Pedigree {
     pub deprecated_ep: Option<&'static str>
 }
 
+#[derive(Debug)]
 pub struct FieldValue {
     pub tag: u32,
     pub name: &'static str,

@@ -2,6 +2,10 @@ pub mod dictionary;
 pub mod field;
 pub mod message;
 pub mod error;
+pub mod order;
+pub mod order_book;
+pub mod order_report;
+pub mod field_collection;
 
 include!(concat!(env!("OUT_DIR"), "/FIX_4_2.rs"));
 include!(concat!(env!("OUT_DIR"), "/FIX_4_4.rs"));
