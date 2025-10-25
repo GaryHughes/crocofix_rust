@@ -18,7 +18,7 @@ pub struct FieldValue {
     pub value: &'static str
 }
 
-pub trait VersionField {
+pub trait OrchestrationField {
     fn tag(&self) -> u32;
     fn is_data(&self) -> bool;
     fn name(&self) -> &'static str;
@@ -49,16 +49,16 @@ pub trait VersionField {
 
 }
 
-impl Debug for dyn VersionField {
+impl Debug for dyn OrchestrationField {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "VersionField {{ name: \"{}\", tag: {} }}", self.name(), self.tag())
+        write!(f, "OrchestrationField {{ name: \"{}\", tag: {} }}", self.name(), self.tag())
     }
 }
 
 pub struct InvalidField {
 }
 
-impl crate::dictionary::VersionField for InvalidField {
+impl crate::dictionary::OrchestrationField for InvalidField {
 
     fn tag(&self) -> u32 { 0 }
     fn is_data(&self) -> bool { false }
@@ -86,15 +86,15 @@ impl crate::dictionary::VersionField for InvalidField {
 
 }
 
-pub struct VersionFieldCollection {
+pub struct OrchestrationFieldCollection {
 
     offsets: Vec<usize>,
-    fields: Vec<Box<dyn VersionField>>
+    fields: Vec<Box<dyn OrchestrationField>>
 }
 
-impl VersionFieldCollection {
+impl OrchestrationFieldCollection {
 
-    pub fn new(offsets: Vec<usize>, fields: Vec<Box<dyn VersionField>>) -> Self
+    pub fn new(offsets: Vec<usize>, fields: Vec<Box<dyn OrchestrationField>>) -> Self
     {
         Self { offsets, fields }
     }
@@ -124,12 +124,12 @@ impl VersionFieldCollection {
     }
 }
 
-unsafe impl Sync for VersionFieldCollection {}
-unsafe impl Send for VersionFieldCollection {}
+unsafe impl Sync for OrchestrationFieldCollection {}
+unsafe impl Send for OrchestrationFieldCollection {}
 
-impl Index<usize> for VersionFieldCollection {
+impl Index<usize> for OrchestrationFieldCollection {
     
-    type Output = Box<dyn VersionField>;
+    type Output = Box<dyn OrchestrationField>;
 
     // TODO - Consider a different trait like array_opts and return an Option
     fn index(&self, tag: usize) -> &Self::Output
@@ -151,14 +151,14 @@ pub enum Presence {
 
 pub struct MessageField
 {
-    field: Box<dyn VersionField>,
+    field: Box<dyn OrchestrationField>,
     field_presence: Presence,
     nesting_depth: u32,
 }
 
 impl MessageField {
 
-    pub fn new(field: Box<dyn VersionField>, field_presence: Presence, nesting_depth: u32) -> Self
+    pub fn new(field: Box<dyn OrchestrationField>, field_presence: Presence, nesting_depth: u32) -> Self
     {
         Self { field, field_presence, nesting_depth }
     }
@@ -195,14 +195,14 @@ pub trait Message
     fn fields(&self) -> &'static Vec<crate::dictionary::MessageField>;
 }
 
-pub struct VersionMessageCollection {
+pub struct MessageCollection {
 
     messages: Vec<Box<dyn Message>>,
     messages_by_msg_type: HashMap<&'static str, usize>
 
 }
 
-impl VersionMessageCollection {
+impl MessageCollection {
 
     pub fn new(messages: Vec<Box<dyn Message>>) -> Self 
     {
@@ -236,10 +236,10 @@ impl VersionMessageCollection {
    
 }
 
-unsafe impl Sync for VersionMessageCollection {}
-unsafe impl Send for VersionMessageCollection {}
+unsafe impl Sync for MessageCollection {}
+unsafe impl Send for MessageCollection {}
 
-impl Index<usize> for VersionMessageCollection {
+impl Index<usize> for MessageCollection {
     
     type Output = Box<dyn Message>;
 
@@ -254,6 +254,6 @@ impl Index<usize> for VersionMessageCollection {
 pub trait Orchestration
 {
     fn name(&self) -> &'static str;
-    fn fields(&self) -> &'static VersionFieldCollection;
-    fn messages(&self) -> &'static VersionMessageCollection;
+    fn fields(&self) -> &'static OrchestrationFieldCollection;
+    fn messages(&self) -> &'static MessageCollection;
 }

@@ -47,10 +47,10 @@ def generate_orchestration_messages(file, orchestration, module):
     
     file.write("}\n\n") # pub mod message
 
-    file.write("pub fn messages() -> &'static crate::dictionary::VersionMessageCollection {\n")
-    file.write("    static FIELDS: std::sync::OnceLock<crate::dictionary::VersionMessageCollection> = std::sync::OnceLock::new();\n")
+    file.write("pub fn messages() -> &'static crate::dictionary::MessageCollection {\n")
+    file.write("    static FIELDS: std::sync::OnceLock<crate::dictionary::MessageCollection> = std::sync::OnceLock::new();\n")
     file.write("    FIELDS.get_or_init(|| {\n")
-    file.write("        crate::dictionary::VersionMessageCollection::new(\n")
+    file.write("        crate::dictionary::MessageCollection::new(\n")
     file.write("            vec![\n")
 
     for message in orchestration.messages.values():

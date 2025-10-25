@@ -39,7 +39,7 @@ def generate_orchestration_fields(file, orchestration, module):
         file.write("}\n\n")
 
    
-        file.write("impl crate::dictionary::VersionField for {} {{\n\n".format(field.name))
+        file.write("impl crate::dictionary::OrchestrationField for {} {{\n\n".format(field.name))
 
         file.write("    fn tag(&self) -> u32 {{ {} }}\n".format(field.id))
         file.write("    fn is_data(&self) -> bool {{ {} }}\n".format(is_data))
@@ -84,10 +84,10 @@ def generate_orchestration_fields(file, orchestration, module):
         file.write("}\n\n")
 
 
-    file.write("pub fn fields() -> &'static crate::dictionary::VersionFieldCollection {\n")
-    file.write("    static FIELDS: std::sync::OnceLock<crate::dictionary::VersionFieldCollection> = std::sync::OnceLock::new();\n")
+    file.write("pub fn fields() -> &'static crate::dictionary::OrchestrationFieldCollection {\n")
+    file.write("    static FIELDS: std::sync::OnceLock<crate::dictionary::OrchestrationFieldCollection> = std::sync::OnceLock::new();\n")
     file.write("    FIELDS.get_or_init(|| {\n")
-    file.write("        crate::dictionary::VersionFieldCollection::new(\n")
+    file.write("        crate::dictionary::OrchestrationFieldCollection::new(\n")
     file.write("            vec![\n                ")
 
     index = 0

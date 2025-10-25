@@ -212,7 +212,7 @@ mod tests {
         let orchestration = FIX_4_4::orchestration();
         let field = &orchestration.fields()[1];
         let debug = format!("{:?}", field);
-        assert_eq!("VersionField { name: \"Account\", tag: 1 }", debug);
+        assert_eq!("OrchestrationField { name: \"Account\", tag: 1 }", debug);
     }
 
 }

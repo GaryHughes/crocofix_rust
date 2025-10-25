@@ -9,8 +9,8 @@ def generate_orchestration(file, orchestration, module):
 
     file.write("impl crate::dictionary::Orchestration for Orchestration {\n")
     file.write("    fn name(&self) -> &'static str {{ \"{}\" }}\n".format(module))
-    file.write("    fn fields(&self) -> &'static crate::dictionary::VersionFieldCollection {{ crate::{}::fields() }}\n".format(module))
-    file.write("    fn messages(&self) -> &'static crate::dictionary::VersionMessageCollection {{ crate::{}::messages() }}\n".format(module))
+    file.write("    fn fields(&self) -> &'static crate::dictionary::OrchestrationFieldCollection {{ crate::{}::fields() }}\n".format(module))
+    file.write("    fn messages(&self) -> &'static crate::dictionary::MessageCollection {{ crate::{}::messages() }}\n".format(module))
     file.write("}\n\n")
                
     file.write("pub fn orchestration() -> &'static crate::{}::Orchestration {{\n".format(module))
