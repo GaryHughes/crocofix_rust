@@ -24,4 +24,4 @@ The lexicographer is a set of [Python](https://python.org) scripts that parses t
 
 | Utilities | |
 | ----------|-|
-| [fixcat](https://github.com/GaryHughes/crocofix_rust/blob/main/fixcat/README.md) | fixcat is inspired by the UNIX cat utility; it will print FIX messages in human readable format with message, field, and enumerated value descriptions. |
+| [fixcat](https://github.com/GaryHughes/crocofix_rust/blob/main/crates/fixcat/README.md) | fixcat is inspired by the UNIX cat utility; it will print FIX messages in human readable format with message, field, and enumerated value descriptions. |
