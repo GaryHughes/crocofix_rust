@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use indexmap::IndexMap;
 use crate::message::Message;
 use crate::order::Order;
 use crate::error::Error;
@@ -6,7 +6,7 @@ use crate::error::Error;
 #[derive(Default)]
 pub struct OrderBook {
     // TODO - perhaps remove Clone from Order and Box
-    pub orders: HashMap<String, Order>
+    pub orders: IndexMap<String, Order>
 }
 
 impl OrderBook {

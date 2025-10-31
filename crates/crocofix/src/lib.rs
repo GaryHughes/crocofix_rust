@@ -135,7 +135,7 @@ mod tests {
 
     #[test]
     fn orchestration_message_definitions() {
-        let orchestration = &FIX_4_4::orchestration();
+        let orchestration = FIX_4_4::orchestration();
         assert_eq!(orchestration.messages().len(), 93);
         let heartbeat = &orchestration.messages()[0];
         assert_eq!(heartbeat.name(), "Heartbeat");
@@ -153,7 +153,7 @@ mod tests {
 
     #[test]
     fn orchestration_message_fields() {
-        let orchestration = &FIX_4_4::orchestration();
+        let orchestration = FIX_4_4::orchestration();
         let heartbeat = &orchestration.messages()[0];
         assert_eq!(heartbeat.fields().len(), 34);
         let begin_string = &heartbeat.fields()[0];
@@ -174,7 +174,7 @@ mod tests {
 
     #[test]
     fn orchestration_lookup_message_name() {
-        let orchestration = &FIX_4_4::orchestration();
+        let orchestration = FIX_4_4::orchestration();
         let messages = orchestration.messages();
         assert_eq!(messages.name_of_message("A"), Some("Logon"));
         assert_eq!(messages.name_of_message("ZZZZ"), None);
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn orchestration_version_field_definitions() {
-        let orchestration = &FIX_4_4::orchestration();
+        let orchestration = FIX_4_4::orchestration();
         let fields = orchestration.fields();
         assert!(fields[0].is_valid() == false);
         assert_eq!(fields.len(), 913);
@@ -192,7 +192,7 @@ mod tests {
 
     #[test]
     fn orchestration_lookup_field_name() {
-        let orchestration = &FIX_4_4::orchestration();
+        let orchestration = FIX_4_4::orchestration();
         let fields = orchestration.fields();
         assert_eq!(fields.name_of_field(100), Some("ExDestination"));
         assert_eq!(fields.name_of_field(999999), None);
@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn orchestration_lookup_field_value() {
-        let orchestration = &FIX_4_4::orchestration();
+        let orchestration = FIX_4_4::orchestration();
         let fields = orchestration.fields();
         assert_eq!(fields.name_of_value(18, "G"), Some("AllOrNone"));
         assert_eq!(fields.name_of_value(999999, "1"), None);
@@ -213,6 +213,13 @@ mod tests {
         let field = &orchestration.fields()[1];
         let debug = format!("{:?}", field);
         assert_eq!("OrchestrationField { name: \"Account\", tag: 1 }", debug);
+    }
+
+    #[test]
+    fn is_tag_valid() {
+        let orchestration = FIX_5_0SP2::orchestration();
+        assert!(orchestration.fields().is_tag_valid(0) == false);
+        assert!(orchestration.fields().is_tag_valid(1));
     }
 
 }

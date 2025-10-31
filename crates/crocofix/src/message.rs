@@ -135,7 +135,7 @@ impl Message {
     // and rewrites the BodyLength and CheckSum by default, these fields must already be present, they
     // will not be added. It does no validation of the message content/structure. 
     // Returns 0 if the buffer is not big enough.
-    pub fn encode(&self, buffer: &mut Vec<u8>, options: EncodeOptions) -> Result<usize, Error>
+    pub fn encode(&self, _buffer: &mut Vec<u8>, _options: EncodeOptions) -> Result<usize, Error>
     {
         Ok(0)
     }

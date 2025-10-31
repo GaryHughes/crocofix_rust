@@ -83,7 +83,7 @@ impl Order {
         crate::FIX_5_0SP2::OrigClOrdID::TAG
     ];
 
-    fn is_identity_field(tag: u32) -> bool
+    pub fn is_identity_field(tag: u32) -> bool
     {
         Order::IDENTITY_FIELDS.contains(&tag)
     }

@@ -47,6 +47,16 @@ pub trait OrchestrationField {
         }
     }
 
+    fn is_numeric(&self) -> bool
+    {
+        matches!(
+            self.data_type().to_lowercase().as_str(),
+            "int" | "length" | "tagnum" | "seqnum" | "numingroup" 
+            | "float" | "qty" | "price" | "priceoffset" 
+            | "amt" | "percentage"
+        )
+    }
+
 }
 
 impl Debug for dyn OrchestrationField {
@@ -83,20 +93,30 @@ impl crate::dictionary::OrchestrationField for InvalidField {
             vec![]
         })
     }
-
 }
 
 pub struct OrchestrationFieldCollection {
 
     offsets: Vec<usize>,
-    fields: Vec<Box<dyn OrchestrationField>>
+    fields: Vec<Box<dyn OrchestrationField>>,
+    offsets_by_name: HashMap<&'static str, usize>
 }
 
 impl OrchestrationFieldCollection {
 
     pub fn new(offsets: Vec<usize>, fields: Vec<Box<dyn OrchestrationField>>) -> Self
     {
-        Self { offsets, fields }
+        let offsets_by_name: HashMap<&'static str, usize> = offsets
+            .iter()
+            .filter(|offset| **offset != 0)
+            .map(|offset| {
+                let field = &fields[*offset];
+
+                (field.name(), *offset)
+            })
+            .collect();
+
+        Self { offsets, fields, offsets_by_name }
     }
 
     pub fn len(&self) -> usize {
@@ -105,6 +125,18 @@ impl OrchestrationFieldCollection {
 
     pub fn is_empty(&self) -> bool {
         self.fields.is_empty()
+    }
+
+    pub fn is_tag_valid(&self, tag: usize) -> bool
+    {
+        match self.offsets
+                .get(tag)
+                .and_then(|&offset| self.fields.get(offset))
+                .map(|field| field.is_valid())
+        {
+            Some(is_valid) => is_valid,
+            None => false
+        }
     }
 
     pub fn name_of_field(&self, tag: usize) -> Option<&'static str> 
@@ -122,6 +154,16 @@ impl OrchestrationFieldCollection {
             .and_then(|&offset| self.fields.get(offset))
             .and_then(|field| field.name_of_value(value))
     }
+
+    pub fn field_with_name(&self, name: &str) -> Option<&Box<dyn OrchestrationField>>
+    {
+        let Some(offset) = self.offsets_by_name.get(name) else {
+            return None;
+        };    
+
+        Some(&self.fields[*offset])
+    }
+
 }
 
 unsafe impl Sync for OrchestrationFieldCollection {}

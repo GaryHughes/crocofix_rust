@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 bitflags = "2.9.4"
+comfy-table = "7.2.1"
+indexmap = "2.12.0"
