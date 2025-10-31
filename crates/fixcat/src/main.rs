@@ -103,7 +103,7 @@ fn decode_and_print_line(line: &String, options: &Options, order_book: &mut Orde
                     Ok(()) => {
                         let _ = match order_report.print(&mut stdout(), order_book) {
                             Ok(bytes) => bytes,
-                            Err(error) => (eprintln!("{:?}", error))
+                            Err(error) => eprintln!("{:?}", error)
                         };
                     },
                     Err(_) => ()
