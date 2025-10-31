@@ -1,9 +1,11 @@
 use crocofix::message::Message;
 use crocofix::order_book::OrderBook;
-use crocofix::order_report::OrderReport;
+use crocofix::error::Error;
+use crocofix::order_report::{OrderReport, DEFAULT_FIELDS};
 use clap::Parser;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read, stdout};
+use std::env;
 
 const FIX_MESSAGE_PREFIX: &str = "8=FIX";
 
@@ -79,6 +81,23 @@ impl Options {
                 .collect()
         }
     }
+
+    pub fn resolve_fields(&self) -> Result<Vec<u32>, Error>
+    {
+        if let Some(fields) = &self.fields {
+            return Ok(fields.clone());
+        }
+        
+        if let Ok(env_fields) = env::var("CROCOFIX_FIXCAT_FIELDS") {
+            return env_fields
+                .split(',')
+                .map(validate_field)
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(Error::InvalidOrderBookFields);
+        }
+        
+        Ok(DEFAULT_FIELDS.to_vec())
+    } 
 }
 
 fn decode_and_print_line(line: &String, options: &Options, order_book: &mut OrderBook, order_report: &mut OrderReport)
@@ -121,10 +140,10 @@ fn decode_and_print_line(line: &String, options: &Options, order_book: &mut Orde
 fn main() -> Result<(), crocofix::error::Error>
 {
     let options = Options::parse();
-
+    let fields = options.resolve_fields()?;
     for reader in options.input_readers()? {
         let mut order_book = OrderBook::default();
-        let mut order_report = OrderReport::with_fields(options.fields.clone());
+        let mut order_report = OrderReport::with_fields(fields.clone());
         for line in reader.lines() {
             decode_and_print_line(&line?, &options, &mut order_book, &mut order_report);
         }

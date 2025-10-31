@@ -21,3 +21,7 @@ git subtree pull --prefix fixorchestra fixorchestra master --squash
 ## lexicographer
 
 The lexicographer is a set of [Python](https://python.org) scripts that parses the orchestration XML and generates a set of modules to allow for easy consumption of the orchestration metdata in Rust programs. Details can be found [here](https://github.com/GaryHughes/crocofix_rust/blob/master/lexicographer/README.md). The generated types rely on common code in the dictionary crate.
+
+| Utilities | |
+| ----------|-|
+| [fixcat](https://github.com/GaryHughes/crocofix_rust/blob/main/fixcat/README.md) | fixcat is inspired by the UNIX cat utility; it will print FIX messages in human readable format with message, field, and enumerated value descriptions. |

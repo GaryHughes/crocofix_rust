@@ -1,4 +1,5 @@
 use std::io;
+use std::ffi::OsString;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
@@ -14,7 +15,9 @@ pub enum Error {
     UnsupportedMsgType(String),
     OrderIndexOutOfRange(usize),
     OrderBookAlreadyContainsOrderWithKey(String),
-    OrderBookDoesNotContainOrderWithKey(String)
+    OrderBookDoesNotContainOrderWithKey(String),
+    InvalidOrderBookFields(String),
+    OsStringConversionFailed(OsString)
 }
 
 impl From<io::Error> for Error {
@@ -22,3 +25,10 @@ impl From<io::Error> for Error {
         Error::IoError
     }
 }
+
+impl From<OsString> for Error {
+    fn from(value: OsString) -> Self {
+        Error::OsStringConversionFailed(value)
+    }
+}
+

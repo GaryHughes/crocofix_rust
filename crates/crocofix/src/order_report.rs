@@ -7,7 +7,7 @@ use comfy_table::*;
 use comfy_table::presets::ASCII_BORDERS_ONLY_CONDENSED;
 
 
-const DEFAULT_FIELDS: &[u32] = &[
+pub const DEFAULT_FIELDS: &[u32] = &[
     crate::FIX_5_0SP2::SenderCompID::TAG,
     crate::FIX_5_0SP2::TargetCompID::TAG,
     crate::FIX_5_0SP2::ClOrdID::TAG,
@@ -31,10 +31,10 @@ pub struct OrderReport {
 
 impl OrderReport
 {
-    pub fn with_fields(fields: Option<Vec<u32>>) -> Self
+    pub fn with_fields(fields: Vec<u32>) -> Self
     {
         Self {
-            fields: fields.unwrap_or(DEFAULT_FIELDS.to_vec())
+            fields: fields
         }
     }
 
